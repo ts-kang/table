@@ -25,6 +25,7 @@ export const tables = {
 
         var diffTable = {
             from: 'SNJ@KMZS beatmaniaIIDX DP非公式難易度表',
+            prefix: '☆',
             indices: new Map(),
             levels: [],
         };
@@ -76,11 +77,17 @@ export const tables = {
 export const playerData = {
     iidxEreterLevel: async options => {
         // ('title\tdifficulty', {rank, percentage, lamp})
-        var dataMap = new Map();
+        var data = {
+            userId: options.userId,
+            records: new Map(),
+        };
 
         const url = `http://ereter.net/iidxplayerdata/${options.userId}/level/${options.level}/`;
 
         const html = new DOMParser().parseFromString(await util.readPage(url), 'text/html');
+
+        data.username = html.querySelector('.content > h3').innerText;
+
         const tables = html.querySelectorAll('[data-sort=table]');
         const dataTable = tables[tables.length - 1];
         dataTable.querySelectorAll('tbody:not(.tablesorter-no-sort)').forEach(tbody => {
@@ -90,7 +97,7 @@ export const playerData = {
                 const fields = row.querySelectorAll('td');
                 const title = fields[1].innerText.replace(/ \([A-Z]+\)$/, '');
                 const difficulty = fields[1].innerText.match(/ \(([A-Z]+)\)$/)[1];
-                dataMap.set(title + '\t' + difficulty, {
+                data.records.set(title + '\t' + difficulty, {
                     rank: fields[4].children.length > 0
                         ? fields[4].querySelectorAll('span span span')[0].innerText
                         : '',
@@ -102,7 +109,7 @@ export const playerData = {
             });
         });
 
-        return dataMap;
+        return data;
         /*
         diff_table.forEach((level_table) => {
             var size = level_table.songs.length;
@@ -151,7 +158,8 @@ async function ereterParser_table(url, iidx, id) {
         const html = new DOMParser().parseFromString(await util.readPage(url), 'text/html');
 
         var diffTable = {
-            from: '<span style="color: #ce8ef9"><span style="color: #91e1ff">ereter</span>\'s dp laboratory</span> & difficulty table from SNJ@KMZS beatmaniaIIDX DP非公式難易度表',
+            from: '<span style="color: #ce8ef9"><span style="color: #91e1ff">ereter</span>\'s dp laboratory</span> & difficulty table from ' + iidx ? 'SNJ@KMZS beatmaniaIIDX DP非公式難易度表' : 'GENOCIDE - bms難易度表 -',
+            prefix: iidx ? '☆' : '★',
             indices: new Map(),
             levels: [],
         };
@@ -175,9 +183,6 @@ async function ereterParser_table(url, iidx, id) {
                 if (!level)
                     level = fields[0].innerText.substring(1);
                 var ret = {
-                    title: fields[1].innerText.replace(/ \([A-Z]+\)$/, ''),
-                    difficulty: fields[1].innerText.match(/ \(([A-Z]+)\)$/)[1],
-                    officialLevel: 12, // ereter analytics page is available only for level 12 currently
                     ereterID: parseInt(fields[1].querySelector('a').href.match(/ranking\/([\d]+)\//)[1]),
                     // [EASY, HARD, EX-HARD] for IIDX, [EASY, HARD] for BMS
                     ereterEst: (iidx ? [3, 5, 7] : [4, 6])
@@ -186,6 +191,14 @@ async function ereterParser_table(url, iidx, id) {
                         .map(i => fields[i].querySelector('span').style.color.match(/\b[\d]+\b/g)
                              .map(c => parseInt(c))),
                 };
+                if (iidx) {
+                    ret.title = fields[1].innerText.replace(/ \([A-Z]+\)$/, '');
+                    ret.difficulty = fields[1].innerText.match(/ \(([A-Z]+)\)$/)[1];
+                    // ereter analytics page is available only for level 12 currently
+                    ret.officialLevel = 12;
+                } else {
+                    ret.title = fields[1].innerText;
+                }
                 diffTable.indices.set(ret.title + '\t' + ret.difficulty, [diffTable.levels.length, i]);
                 return ret;
             });

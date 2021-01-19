@@ -4,7 +4,6 @@ export const list = {
     iidx: {
         ereterAnalytics: {
             display: 'ereter.net Analytics',
-            prefix: '☆',
             selects: {
                 level: {
                     display: 'Level',
@@ -23,7 +22,6 @@ export const list = {
         },
         snjkmzsRank: {
             display: 'SNJ@KMZS',
-            prefix: '☆',
             selects: {
                 level: {
                     display: 'Level',
@@ -56,7 +54,6 @@ export const list = {
     bms: {
         ereterInsaneAnalytics: {
             display: 'ereter.net Insane Analytics',
-            prefix: '★',
             parse: parser.tables.bmsEreterInsaneAnalytics,
             playerData: {
                 ereter: {
