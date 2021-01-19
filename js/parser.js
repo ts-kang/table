@@ -13,53 +13,18 @@ export const tables = {
         throw new Error('not implemented');
     },
 
-    iidxEreterAnalytics: async () => {
-        const url = 'http://ereter.net/iidxsongs/analytics/perlevel/';
-
-        var diffTable = {
-            indices: new Map(),
-            levels: [],
-        };
-
-        const html = new DOMParser().parseFromString(await util.readPage(url), 'text/html');
-        const tables = html.querySelectorAll('[data-sort=table]');
-        const tableAnalytics = tables[tables.length - 1];
-
-        tableAnalytics.querySelectorAll('tbody:not(.tablesorter-no-sort)').forEach(tbody => {
-            var level;
-            const songs = Array.from(tbody.querySelectorAll('tr')).map((row, i) => {
-                const fields = row.querySelectorAll('td');
-                if (!level)
-                    level = fields[0].innerText.substring(1);
-                const ret = {
-                    title: fields[1].innerText.replace(/ \([A-Z]+\)$/, ''),
-                    difficulty: fields[1].innerText.match(/ \(([A-Z]+)\)$/)[1],
-                    officialLevel: 12, // ereter analytics page is available only for level 12 currently
-                    ereterSongID: parseInt(fields[1].querySelector('a').href.match(/\/iidxranking\/([\d]+)\//)[1]),
-                    ereterEst: [3, 5, 7] // easy, hard, ex-hard
-                        .map(i => parseFloat(fields[i].querySelector('span').innerText.substring(1))),
-                    ereterColor: [3, 5, 7]
-                        .map(i => fields[i].querySelector('span').style.color.match(/\b[\d]+\b/g)
-                             .map(c => parseInt(c))),
-                };
-                diffTable.indices.set(ret.title + '\t' + ret.difficulty, [diffTable.levels.length, i]);
-                return ret;
-            });
-            if (!level)
-                return;
-            diffTable.levels.push({
-                level: level,
-                songs: songs,
-            });
-        });
-
-        return diffTable;
+    iidxEreterAnalytics: async options => {
+        const url = options.userId
+              ? `http://ereter.net/iidxplayerdata/${options.userId}/analytics/perlevel/`
+              : `http://ereter.net/iidxsongs/analytics/perlevel/`;
+        return ereterParser_table(url, true, options.userId);
     },
 
-    iidxSnjkmzsRank: async level => {
+    iidxSnjkmzsRank: async options => {
         const url = 'https://zasa.sakura.ne.jp/dp/rank.php';
 
         var diffTable = {
+            from: 'SNJ@KMZS beatmaniaIIDX DP非公式難易度表',
             indices: new Map(),
             levels: [],
         };
@@ -69,7 +34,7 @@ export const tables = {
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
-            body: `env=a280&submit=%E8%A1%A8%E7%A4%BA&cat=0&mode=p1&offi=${level}`,
+            body: `env=a280&submit=%E8%A1%A8%E7%A4%BA&cat=0&mode=p1&offi=${options.level}`,
         }), 'text/html');
         const tables = html.querySelectorAll('table.rank_p1');
         const tableRank = tables[tables.length - 1];
@@ -85,7 +50,7 @@ export const tables = {
                         .replace('H', 'HYPER')
                         .replace('A', 'ANOTHER')
                         .replace('L', 'LEGGENDARIA'),
-                    officialLevel: level,
+                    officialLevel: options.level,
                     snjkmzsID: song.href.match(/music.php\?id=([\d-]+)/)[1],
                 };
                 diffTable.indices.set(ret.title + '\t' + ret.difficulty, [diffTable.levels.length, i]);
@@ -99,14 +64,21 @@ export const tables = {
 
         return diffTable;
     },
+
+    bmsEreterInsaneAnalytics: async options => {
+        const url = options.userId
+              ? `http://ereter.net/bmsplayerdata/${options.userId}/dpbms/analytics/perlevel/`
+              : `http://ereter.net/bmssongs/dpbms/analytics/perlevel/`;
+        return ereterParser_table(url, false, options.userId);
+    },
 };
 
 export const playerData = {
-    iidxEreterLevel: async (iidxID, level) => {
+    iidxEreterLevel: async options => {
         // ('title\tdifficulty', {rank, percentage, lamp})
         var dataMap = new Map();
 
-        const url = `http://ereter.net/iidxplayerdata/${iidxID}/level/${level}/`;
+        const url = `http://ereter.net/iidxplayerdata/${options.userId}/level/${options.level}/`;
 
         const html = new DOMParser().parseFromString(await util.readPage(url), 'text/html');
         const tables = html.querySelectorAll('[data-sort=table]');
@@ -166,12 +138,72 @@ export const playerData = {
         */
     },
 
-    bmsEreterInsane: async lr2id => {
-        // title may be duplicated,
+    bmsEreterInsane: async options =>
+        ereterBMSParser_playerdata(`http://ereter.net/bmsplayerdata/${options.userId}/`),
+
+    bmsEreterOverjoy: async options =>
+        ereterBMSParser_playerdata(`http://ereter.net/bmsplayerdata/${options.userId}/dpoverjoy/songs/perlevel/`),
+}
+
+// for IIDX and Insane BMS analytics page
+// use json parser for Overjoy table
+async function ereterParser_table(url, iidx, id) {
+        const html = new DOMParser().parseFromString(await util.readPage(url), 'text/html');
+
+        var diffTable = {
+            from: '<span style="color: #ce8ef9"><span style="color: #91e1ff">ereter</span>\'s dp laboratory</span> & difficulty table from SNJ@KMZS beatmaniaIIDX DP非公式難易度表',
+            indices: new Map(),
+            levels: [],
+        };
+
+        if (id) {
+            let user = html.querySelector('.content > h3');
+            diffTable.userInfo = {};
+            diffTable.userInfo.id = id;
+            diffTable.userInfo.username = user.innerText.replace(/ - .*$/, '');
+            diffTable.userInfo.clearAbility = user.querySelector('span').innerText.substring(1);
+            diffTable.userInfo.clearAbility_color = user.querySelector('span').style.color;
+        }
+
+        const tables = html.querySelectorAll(id ? '[data-sort=table-perlevel]' : '[data-sort=table]');
+        const tableAnalytics = tables[tables.length - 1];
+
+        tableAnalytics.querySelectorAll('tbody:not(.tablesorter-no-sort)').forEach(tbody => {
+            var level;
+            const songs = Array.from(tbody.querySelectorAll('tr')).map((row, i) => {
+                const fields = row.querySelectorAll('td');
+                if (!level)
+                    level = fields[0].innerText.substring(1);
+                var ret = {
+                    title: fields[1].innerText.replace(/ \([A-Z]+\)$/, ''),
+                    difficulty: fields[1].innerText.match(/ \(([A-Z]+)\)$/)[1],
+                    officialLevel: 12, // ereter analytics page is available only for level 12 currently
+                    ereterID: parseInt(fields[1].querySelector('a').href.match(/ranking\/([\d]+)\//)[1]),
+                    // [EASY, HARD, EX-HARD] for IIDX, [EASY, HARD] for BMS
+                    ereterEst: (iidx ? [3, 5, 7] : [4, 6])
+                        .map(i => parseFloat(fields[i].querySelector('span').innerText.substring(1))),
+                    ereterColor: (iidx ? [3, 5, 7] : [4, 6])
+                        .map(i => fields[i].querySelector('span').style.color.match(/\b[\d]+\b/g)
+                             .map(c => parseInt(c))),
+                };
+                diffTable.indices.set(ret.title + '\t' + ret.difficulty, [diffTable.levels.length, i]);
+                return ret;
+            });
+            if (!level)
+                return;
+            diffTable.levels.push({
+                level: level,
+                songs: songs,
+            });
+        });
+
+        return diffTable;
+}
+
+async function ereterBMSParser_playerdata(url) {
+        // title can be duplicated,
         // ('title', {rank, percentage, lamp})
         var dataMap = new Map();
-
-        const url = `http://ereter.net/bmsplayerdata/${lr2id}/`;
 
         const html = new DOMParser().parseFromString(await util.readPage(url), 'text/html');
         const tables = html.querySelectorAll('[data-sort=table]');
@@ -196,5 +228,4 @@ export const playerData = {
         });
 
         return dataMap;
-    },
 }

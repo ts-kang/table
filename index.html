@@ -2,15 +2,24 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <title>난이도표 생성기</title>
+  <title>iidx dp 난이도표 생성기</title>
   <link href="css/style.css" rel="stylesheet">
   <link href="css/fontello.css" rel="stylesheet">
 </head>
 <body>
   <div class="header">
-    <form id="player_form">
-      <div style="display: flex; width: 12rem">
-        <input type="text" id="player" placeholder="IIDX ID">
+    <form id="form_options">
+      <div class="option">
+        <div>Difficulty Table</div>
+        <select id="select_table">
+          <optgroup label="IIDX DP" data-value="iidx"></optgroup>
+          <optgroup label="DP BMS" data-value="bms"></optgroup>
+          <option value="other">Others</option>
+        </select>
+      </div>
+      <div id="select_options"></div>
+      <div style="display: flex">
+        <input type="text" id="user_id" style="width: 8rem" placeholder="IIDX ID">
         <button type="submit">
           <span class="icon-search"></span>
         </button>
@@ -18,9 +27,9 @@
     </form>
     <div class="links">
       <div>Contact: <a href="https://twitter.com/naynn_n" target="_blank">@naynn_n</a></div>
-      <div><a class="ext" href="https://twitter.com/DPisFUN_DXER">@ TEAM DXER</a></div>
+      <div><a class="ext" href="https://twitter.com/DPisFUN_DXER">@TEAM_DXER</a></div>
       <div><a class="ext" style="font-size: 18px; line-height: 1; color: #ce8ef9" href="http://ereter.net/"><span style="color: #91e1ff;">ereter</span>'s dp laboratory</a></div>
-      <div><a class="ext" href="https://zasa.sakura.ne.jp/dp/">beatmaniaIIDX DP非公式難易度表</div>
+      <div><a class="ext" href="https://zasa.sakura.ne.jp/dp/">SNJ@KMZS beatmaniaIIDX DP非公式難易度表</a></div>
     </div>
     <div class="menu">
       <div class="name">Show</div>
@@ -44,8 +53,6 @@
   </div>
   <div id="content"></div>
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="js/script.js"></script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>
