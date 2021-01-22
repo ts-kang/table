@@ -83,7 +83,6 @@ DiffTable.prototype = {
         this.groups.forEach(group => group.songs.forEach(song => song.domObj.style.order = ''));
 
         const comparators = this.sortBy.map(c => [this.fields[c.substring(1)].compare, parseInt(c.charAt(0) + '1')]);
-        console.log(comparators);
         this.groups.forEach(group => {
             group.songs.sort((a, b) => comparators.reduce((total, [c, asc]) => asc * c(a, b) || total));
             group.songs.forEach((song, i) => song.domObj.style.order = i);
