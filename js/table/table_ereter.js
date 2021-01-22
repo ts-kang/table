@@ -3,29 +3,8 @@ import * as util from '../util.js'
 
 const TYPE = { IIDX: 0, BMS: 1 };
 
-function EreterIIDXTable(userId) {
-    EreterTable.call(this, userId, TYPE.IIDX);
-    let _super_render = this.options.level.render;
-    this.options.level.render = () => {
-        let select = _super_render();
-        select.innerHTML = `<option value="12">☆12</option>`;
-    };
-}
-
-EreterIIDXTable.prototype = Object.create(EreterTable.prototype);
-EreterIIDXTable.prototype.constructor = EreterIIDXTable;
-
-
-function EreterBMSInsaneTable(userId) {
-    EreterTable.call(this, userId, TYPE.BMS);
-    EreterTable.options = {};
-}
-
-EreterBMSInsaneTable.prototype = Object.create(EreterTable.prototype);
-EreterBMSInsaneTable.prototype.constructor = EreterBMSInsaneTable;
-
-function EreterTable(userId, type) {
-    DiffTable.call(this, userId);
+function EreterTable(type) {
+    DiffTable.call(this);
     this.type = type;
     this.prefix = this.type === TYPE.BMS ? '★' : '☆';
     this.fields.ereterEst = {
@@ -38,9 +17,14 @@ function EreterTable(userId, type) {
     };
 }
 
+EreterTable.prototype = Object.create(DiffTable.prototype);
+EreterTable.prototype.constructor = EreterTable;
+
 EreterTable.prototype.renderTable = async function(container) {
-    DiffTable.prototype.renderTable.call(this, container);
-    container.querySelector('h3').innerHTML += ` - <span style="color: ${this.player.clearAbility_color}">★${this.player.clearAbility}</span>`;
+    await DiffTable.prototype.renderTable.call(this, container);
+    const h3 = container.querySelector('h3');
+    if (h3)
+        h3.innerHTML += ` - <span style="color: ${this.player.clearAbility_color}">★${this.player.clearAbility}</span>`;
 }
 
 EreterTable.prototype.parse = async function() {
@@ -74,9 +58,9 @@ EreterTable.prototype.parse = async function() {
             var ret = {
                 ereterID: parseInt(fields[1].querySelector('a').href.match(/ranking\/([\d]+)\//)[1]),
                 // [EASY, HARD, EX-HARD] for IIDX, [EASY, HARD] for BMS
-                ereterEst: (iidx ? [3, 5, 7] : [4, 6])
+                ereterEst: (this.type === TYPE.IIDX ? [3, 5, 7] : [4, 6])
                     .map(i => parseFloat(fields[i].querySelector('span').innerText.substring(1))),
-                ereterColor: (iidx ? [3, 5, 7] : [4, 6])
+                ereterColor: (this.type === TYPE.IIDX ? [3, 5, 7] : [4, 6])
                     .map(i => fields[i].querySelector('span').style.color.match(/\b[\d]+\b/g)
                          .map(c => parseInt(c))),
             };
@@ -98,6 +82,27 @@ EreterTable.prototype.parse = async function() {
         });
     });
 
-    return this;
+    this.groups.reverse();
 }
 
+export function EreterIIDXTable() {
+    EreterTable.call(this, TYPE.IIDX);
+    delete this.dataSources.lr2songdb;
+    let _super_render = this.options.level.render;
+    this.options.level.render = () => {
+        let select = _super_render.call(this.options.level);
+        select.innerHTML = `<option value="12">☆12</option>`;
+        return select;
+    };
+}
+
+EreterIIDXTable.prototype = Object.create(EreterTable.prototype);
+EreterIIDXTable.prototype.constructor = EreterIIDXTable;
+
+export function EreterBMSInsaneTable() {
+    EreterTable.call(this, TYPE.BMS);
+    delete EreterTable.options.level;
+}
+
+EreterBMSInsaneTable.prototype = Object.create(EreterTable.prototype);
+EreterBMSInsaneTable.prototype.constructor = EreterBMSInsaneTable;

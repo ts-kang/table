@@ -13,29 +13,37 @@ const DOM = {
     screenshot: document.getElementById('screenshot'),
 };
 
-const TABLES = [
-    {}
-];
+var TABLES = {
+    iidx_ereter_analytics: async () => await import('./table/table_ereter.js').then(m => new m.EreterIIDXTable()),
+    iidx_snjkmzs_rank: async () => await import('./table/table_snjkmzs.js').then(m => new m.SnjkmzsRankTable()),
+    bms_ereter_insane_analytics: async () => await import('./table/table_ereter.js').then(m => new m.EreterBMSInsaneTable()),
+    bms_custom: async () => await import('./table/table_base.js').then(m => new m.DiffTable()),
+};
 
 window.onload = async () => {
-    ['iidx', 'bms']
-        .forEach((type, i) => {
-            Object.entries(tables.list[type]).forEach(([key, table]) => {
-                var option = document.createElement('option');
-                option.value = key;
-                option.innerText = table.display;
-                DOM.selectTable.children[i].appendChild(option);
-            })});
-    DOM.selectTable.children[0].children[0].selected = true;
-    DOM.selectTable.addEventListener('change', updateOptions);
-    updateOptions();
+    DOM.selectTable.addEventListener('change', onSelectTable);
+    onSelectTable();
 
     DOM.formOptions.addEventListener('submit', buildTable);
 };
 
+async function onSelectTable() {
+    let table = TABLES[DOM.selectTable.value];
+    if(typeof table === 'function')
+        table = TABLES[DOM.selectTable.value] = await table();
+    
+    table.renderOptions(DOM.options);
+}
+
 async function buildTable(e) {
     e.preventDefault();
 
+    const table = TABLES[DOM.selectTable.value];
+    table.player.userId = DOM.inputId.value.replace(/[\D]/g, '');
+    await table.parse();
+    await table.renderTable(DOM.content);
+
+    /*
     const type = DOM.selectTable.selectedOptions[0].parentElement.dataset.value;
     const table = tables.list[type][DOM.selectTable.value];
 
@@ -85,8 +93,10 @@ async function buildTable(e) {
         return;
     }
     renderTable(table);
+    */
 }
 
+/*
 function renderTable(table, playerData) {
     if (playerData) {
         if (table.userInfo)
@@ -188,3 +198,4 @@ function updateOptions() {
         DOM.inputId.placeholder = 'LR2 ID';
 
 }
+*/

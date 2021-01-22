@@ -1,10 +1,9 @@
 import * as util from '../util.js';
-import { CSVData } from '../data_source/data_csv.js';
 
 const LAMPS = ['NO-PLAY', 'FAILED', 'ASSIST', 'EASY', 'CLEAR', 'HARD', 'EX-HARD', 'FULLCOMBO'];
 const RANKS = ['F', 'F', 'E', 'D', 'C', 'B', 'A', 'AA', 'AAA'];
 
-function DiffTable(userId) {
+export function DiffTable() {
     this.name = undefined;
     this.display = undefined;
     this.fields = {
@@ -39,37 +38,41 @@ function DiffTable(userId) {
     this.group = 'level';
     this.prefix = '☆';
     this.player = {
-        userId: userId,
+        userId: undefined,
         username: undefined,
     };
     this.groups = [];
     this.dataSources = {
         lr2songdb: {
             display: 'LR2 song.db',
-            newInstance: () => {
-                import { LR2SongDB } from '../data/lr2_song_db.js';
-                return new LR2SongDB();
-            },
+            newInstance: async () => await import('../data/lr2_song_db.js').then(m => new m.LR2SongDB()),
         },
     };
     this.options = {
         dataSource: {
             display: 'Player Data Source',
             value: Object.keys(this.dataSources)[0],
-            render: function() {
+            render: () => {
                 let select = document.createElement('select');
-                Object.entries(this.dataSources)
-                    .forEach(([key, dataSource]) => `<option value="${key}">☆${dataSource.display}</option>`);
-                select.querySelector(`[value="${this.value}]"`).selected = true;
+                select.innerHTML = Object.entries(this.dataSources)
+                    .map(([key, src]) => `<option value="${key}">${src.display}</option>`)
+                    .join('');
+                const option = select.querySelector(`[value="${this.options.dataSource.value}"]`);
+                if (option)
+                    option.selected = true;
+                return select;
             }
         },
         level: {
             display: 'Level',
             value: 12,
-            render: function() {
+            render() {
                 let select = document.createElement('select');
-                Array(12).reverse().forEach(i => select.innerHTML += `<option value="${i + 1}">☆${i + 1}</option>`);
-                select.querySelector(`[value="${this.value}]"`).selected = true;
+                select.innerHTML = [...Array(12).keys()]
+                    .reverse()
+                    .map(i => `<option value="${i + 1}">☆${i + 1}</option>`)
+                    .join('');
+                select.querySelector(`[value="${this.value}"]`).selected = true;
                 select.addEventListener('change', () => this.value = select.value);
                 return select;
             },
@@ -78,12 +81,12 @@ function DiffTable(userId) {
 }
 
 DiffTable.prototype = {
-    sort: function() {
+    sort() {
         this.groups.forEach(group => group.songs.forEach(song => song.domObj.style.order = ''));
         this.order.forEach(criterion => this.sortBy(criterion));
     },
 
-    sortBy: function(criterion) {
+    sortBy(criterion) {
         this.groups.forEach(group => {
             const orders = group.songs.map(song => song.domObj.style.order || 0);
             const max = Math.max(...orders);
@@ -96,38 +99,43 @@ DiffTable.prototype = {
     },
 
     // json parser for bms
-    parse: async function() {
+    async parse() {
         throw new Error('not implemented');
     },
 
-    updateVisibility: function() {
+    updateVisibility() {
         this.groups.forEach(group => group.songs.forEach(song =>
             Object.entries(this.visible).forEach(([k, v]) => this.fields[k].show(song, v))));
     },
 
-    renderOptions: function(container) {
+    renderOptions(container) {
         container.innerHTML = '';
         Object.values(this.options).forEach(option => {
             let div = document.createElement('div');
             div.className = 'option';
-            div.innerHTML += `<div>${option.display}</div>`;
+            if (option.display)
+                div.innerHTML += `<div>${option.display}</div>`;
             div.appendChild(option.render());
             container.appendChild(div);
         });
     },
 
-    renderTable: async function(container) {
+    async renderTable(container) {
         container.innerHTML = '';
 
-        if (this.player.userId)
-            container.innerHTML += `<h3 style="margin-top: 0">${user_info.username}</h3>`;
+        if (this.player.username !== undefined)
+            container.innerHTML += `<h3 style="margin-top: 0">${this.player.username}</h3>`;
 
         this.groups.forEach(group => {
-            let songs, levelLamp, avgPercentage, dataCount;
+            let songs = [];
+            let levelLamp = 'NO-PLAY';
+            let avgPercentage = 0;
+            let dataCount = 0;
             group.songs.forEach(song => {
                 if (song.playerData && (song.playerData.lamp !== 'NO-PLAY' || RANKS.indexOf(song.playerData.rank) > -1))
                     ++dataCount;
-                //song.playerData = {lamp: 'NO-PLAY', rank: '', percentage: 0};
+                else
+                    song.playerData = {lamp: 'NO-PLAY', rank: '', percentage: 0}; /////////////====================
                 let divSong = document.createElement('div');
                 divSong.className = 'song';
                 divSong.innerHTML += `
@@ -143,29 +151,28 @@ DiffTable.prototype = {
                 if (LAMPS.indexOf(song.playerData.lamp) < LAMPS.indexOf(levelLamp))
                     levelLamp = song.playerData.lamp;
                 avgPercentage += song.playerData.percentage;
-            }, ['', LAMPS[LAMPS.length - 1], 0]);
+            });
             avgPercentage /= dataCount;
             const avgRank = RANKS[Math.trunc(avgPercentage / 100 * 9)];
 
-            const group = document.createElement('div');
-            group.className = 'group';
-            group.innerHTML = `
+            const divGroup = document.createElement('div');
+            divGroup.className = 'group';
+            divGroup.innerHTML = `
 <div class="level">
   <span>
-    ${table.prefix}${group.level}
+    ${this.prefix}${group.name}
   </span>
   <span class="right">
     <span class="lamp ${levelLamp}"></span>
   </span>
 </div>
-<div class="songs">
-  ${songs}
-</div>
+<div class="songs"></div>
 `;
-            container.appendChild(group);
-            group.forEach(song => {
-                const title = song.querySelector('.title');
-                const divWidth = song.offsetWidth - (song.querySelector('.right').offsetWidth || 0) - 3;
+            divGroup.querySelector('.songs').append(...songs);
+            container.appendChild(divGroup);
+            group.songs.forEach(song => {
+                const title = song.domObj.querySelector('.title');
+                const divWidth = song.domObj.offsetWidth - (song.domObj.querySelector('.right').offsetWidth || 0) - 3;
                 if (title.offsetWidth > divWidth) {
                     let widthScale = Math.max(divWidth / title.offsetWidth, 0.6);
                     title.style.transform = `scaleX(${widthScale})`;
