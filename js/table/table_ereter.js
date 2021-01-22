@@ -16,7 +16,7 @@ function EreterTable(type) {
         visible: true,
         updateDisplay(song) { song.domObj.style.backgroundColor = this.visible ? `rgba(${song.ereterColor[0].join(', ')}, 0.3)` : '' },
     };
-    this.sortBy = ['+title', '-lamp', '+ereterEst'];
+    this.sortBy = ['+title', '-lamp', '-ereterEst'];
 }
 
 EreterTable.prototype = Object.create(DiffTable.prototype);
