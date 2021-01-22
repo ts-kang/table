@@ -41,6 +41,7 @@ async function buildTable(e) {
     const table = TABLES[DOM.selectTable.value];
     table.player.userId = DOM.inputId.value.replace(/[\D]/g, '');
     await table.parse();
+    console.log(table.groups);
     await table.renderTable(DOM.content);
 
     /*

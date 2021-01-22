@@ -9,12 +9,14 @@ function EreterTable(type) {
     this.prefix = this.type === TYPE.BMS ? '★' : '☆';
     this.fields.ereterEst = {
         display: 'Ereter Difficulty',
-        order: song => song.playerData.percentage,
+        compare: (a, b) => a.ereterEst[0] - b.ereterEst[0],
     };
     this.fields.ereterColor = {
         display: 'Difficulty Color',
-        show: (song, visible) => song.domObj.style.backgroundColor = `rgba(${song.ereterColor[0].join(', ')}, 0.3)`,
+        visible: true,
+        updateDisplay(song) { song.domObj.style.backgroundColor = this.visible ? `rgba(${song.ereterColor[0].join(', ')}, 0.3)` : '' },
     };
+    this.sortBy = ['+title', '-lamp', '+ereterEst'];
 }
 
 EreterTable.prototype = Object.create(DiffTable.prototype);
@@ -55,14 +57,14 @@ EreterTable.prototype.parse = async function() {
             const fields = row.querySelectorAll('td');
             if (!level)
                 level = fields[0].innerText.substring(1);
+            const offset = this.player.userId ? 1 : 0;
+            // [EASY, HARD, EX-HARD] for IIDX, [EASY, HARD] for BMS
+            const estIndices = this.type === TYPE.IIDX ? [2, 4, 6] : [3, 5];
             var ret = {
                 ereterID: parseInt(fields[1].querySelector('a').href.match(/ranking\/([\d]+)\//)[1]),
-                // [EASY, HARD, EX-HARD] for IIDX, [EASY, HARD] for BMS
-                ereterEst: (this.type === TYPE.IIDX ? [3, 5, 7] : [4, 6])
-                    .map(i => parseFloat(fields[i].querySelector('span').innerText.substring(1))),
-                ereterColor: (this.type === TYPE.IIDX ? [3, 5, 7] : [4, 6])
-                    .map(i => fields[i].querySelector('span').style.color.match(/\b[\d]+\b/g)
-                         .map(c => parseInt(c))),
+                ereterEst: estIndices.map(i => parseFloat(fields[i + offset].querySelector('span').innerText.substring(1))),
+                ereterColor: estIndices.map(i => fields[i + offset].querySelector('span').style.color.match(/\b[\d]+\b/g)
+                                            .map(c => parseInt(c))),
             };
             if (this.type === TYPE.IIDX) {
                 ret.title = fields[1].innerText.replace(/ \([A-Z]+\)$/, '');
@@ -101,7 +103,7 @@ EreterIIDXTable.prototype.constructor = EreterIIDXTable;
 
 export function EreterBMSInsaneTable() {
     EreterTable.call(this, TYPE.BMS);
-    delete EreterTable.options.level;
+    delete this.options.level;
 }
 
 EreterBMSInsaneTable.prototype = Object.create(EreterTable.prototype);
