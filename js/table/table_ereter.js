@@ -5,15 +5,20 @@ const TYPE = { IIDX: 0, BMS: 1 };
 
 function EreterIIDXTable(userId) {
     EreterTable.call(this, userId, TYPE.IIDX);
+    let _super_render = this.options.level.render;
+    this.options.level.render = () => {
+        let select = _super_render();
+        select.innerHTML = `<option value="12">☆12</option>`;
+    };
 }
 
 EreterIIDXTable.prototype = Object.create(EreterTable.prototype);
 EreterIIDXTable.prototype.constructor = EreterIIDXTable;
 
-EreterIIDXTable.prototype.
 
 function EreterBMSInsaneTable(userId) {
     EreterTable.call(this, userId, TYPE.BMS);
+    EreterTable.options = {};
 }
 
 EreterBMSInsaneTable.prototype = Object.create(EreterTable.prototype);
@@ -23,6 +28,19 @@ function EreterTable(userId, type) {
     DiffTable.call(this, userId);
     this.type = type;
     this.prefix = this.type === TYPE.BMS ? '★' : '☆';
+    this.fields.ereterEst = {
+        display: 'Ereter Difficulty',
+        order: song => song.playerData.percentage,
+    };
+    this.fields.ereterColor = {
+        display: 'Difficulty Color',
+        show: (song, visible) => song.domObj.style.backgroundColor = `rgba(${song.ereterColor[0].join(', ')}, 0.3)`,
+    };
+}
+
+EreterTable.prototype.renderTable = async function(container) {
+    DiffTable.prototype.renderTable.call(this, container);
+    container.querySelector('h3').innerHTML += ` - <span style="color: ${this.player.clearAbility_color}">★${this.player.clearAbility}</span>`;
 }
 
 EreterTable.prototype.parse = async function() {
@@ -62,7 +80,7 @@ EreterTable.prototype.parse = async function() {
                     .map(i => fields[i].querySelector('span').style.color.match(/\b[\d]+\b/g)
                          .map(c => parseInt(c))),
             };
-            if (iidx) {
+            if (this.type === TYPE.IIDX) {
                 ret.title = fields[1].innerText.replace(/ \([A-Z]+\)$/, '');
                 ret.difficulty = fields[1].innerText.match(/ \(([A-Z]+)\)$/)[1];
                 // ereter analytics page is available only for level 12 currently
@@ -70,17 +88,16 @@ EreterTable.prototype.parse = async function() {
             } else {
                 ret.title = fields[1].innerText;
             }
-            diffTable.indices.set(ret.title + '\t' + ret.difficulty, [diffTable.levels.length, i]);
             return ret;
         });
         if (!level)
             return;
-        diffTable.levels.push({
-            level: level,
+        this.groups.push({
+            name: level,
             songs: songs,
         });
     });
 
-    return diffTable;
+    return this;
 }
 

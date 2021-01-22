@@ -6,36 +6,34 @@ const RANKS = ['F', 'F', 'E', 'D', 'C', 'B', 'A', 'AA', 'AAA'];
 
 function DiffTable(userId) {
     this.name = undefined;
-    this.displayName = undefined;
-    this.showData = {
+    this.display = undefined;
+    this.fields = {
         title: {
-            displayName: 'Title',
-            update: (song, show) => song.domObj.querySelector('.title').style.display = show ? '' : 'none',
+            display: 'Title',
+            show: (song, visible) => song.domObj.querySelector('.title').style.display = visible ? '' : 'none',
+            order: (song, data) => ''.localeCompare(song.title),
         },
         lamp: {
-            displayName: 'Clear Lamp',
-            update: (song, show) => song.domObj.querySelector('.lamp').style.display = show ? '' : 'none',
+            display: 'Clear Lamp',
+            show: (song, visible) => song.domObj.querySelector('.lamp').style.display = visible ? '' : 'none',
+            order: (song, data) => LAMPS.indexOf(data.lamp),
         },
         rank: {
-            displayName: 'Rank',
-            update: (song, show) => song.domObj.querySelectorAll('.rank')[0].style.display = show ? '' : 'none',
+            display: 'Rank',
+            show: (song, visible) => song.domObj.querySelectorAll('.rank')[0].style.display = visible ? '' : 'none',
+            order: (song, data) => RANKS.indexOf(data.rank),
         },
         percentage: {
-            displayName: 'Percentage',
-            update: (song, show) => song.domObj.querySelectorAll('.rank')[1].style.display = show ? '' : 'none',
+            display: 'Percentage',
+            show: (song, visible) => song.domObj.querySelectorAll('.rank')[1].style.display = visible ? '' : 'none',
+            order: (song, data) => data.percentage,
         },
     };
-    this.show = {
+    this.visible = {
         title: true,
         lamp: true,
         rank: false,
         percentage: false,
-    };
-    this.criteria = {
-        title: (song, record) => ''.localeCompare(song.title),
-        lamp: (song, record) => LAMPS.indexOf(record.lamp),
-        rank: (song, record) => RANKS.indexOf(record.rank),
-        percentage: (song, record) => record.percentage,
     };
     this.order = ['+title', '-lamp'];
     this.group = 'level';
@@ -43,26 +41,56 @@ function DiffTable(userId) {
     this.player = {
         userId: userId,
         username: undefined,
-        // ('title' or 'title\tdifficulty', {rank, percentage, lamp})
-        data: new Map(),
     };
-    this.dataSources = [new CSVData()];
+    this.groups = [];
+    this.dataSources = {
+        lr2songdb: {
+            display: 'LR2 song.db',
+            newInstance: () => {
+                import { LR2SongDB } from '../data/lr2_song_db.js';
+                return new LR2SongDB();
+            },
+        },
+    };
+    this.options = {
+        dataSource: {
+            display: 'Player Data Source',
+            value: Object.keys(this.dataSources)[0],
+            render: function() {
+                let select = document.createElement('select');
+                Object.entries(this.dataSources)
+                    .forEach(([key, dataSource]) => `<option value="${key}">☆${dataSource.display}</option>`);
+                select.querySelector(`[value="${this.value}]"`).selected = true;
+            }
+        },
+        level: {
+            display: 'Level',
+            value: 12,
+            render: function() {
+                let select = document.createElement('select');
+                Array(12).reverse().forEach(i => select.innerHTML += `<option value="${i + 1}">☆${i + 1}</option>`);
+                select.querySelector(`[value="${this.value}]"`).selected = true;
+                select.addEventListener('change', () => this.value = select.value);
+                return select;
+            },
+        },
+    };
 }
 
 DiffTable.prototype = {
-    sort: async function() {
+    sort: function() {
         this.groups.forEach(group => group.songs.forEach(song => song.domObj.style.order = ''));
         this.order.forEach(criterion => this.sortBy(criterion));
     },
 
-    sortBy: async function(criterion) {
+    sortBy: function(criterion) {
         this.groups.forEach(group => {
             const orders = group.songs.map(song => song.domObj.style.order || 0);
             const max = Math.max(...orders);
             const min = Math.min(...orders);
             group.songs.forEach(song => {
                 song.domObj.style.order = (song.domObj.style.order || 0)
-                    + parseInt(criterion.charAt(0) + '1') * (max - min + 1) * this.criteria[criterion.substring(1)](song, this.player.data.get(song.key));
+                    + parseInt(criterion.charAt(0) + '1') * (max - min + 1) * this.fields[criterion.substring(1)].order(song);
             });
         });
     },
@@ -72,39 +100,51 @@ DiffTable.prototype = {
         throw new Error('not implemented');
     },
 
-    updateDisplay: async function() {
+    updateVisibility: function() {
         this.groups.forEach(group => group.songs.forEach(song =>
-            Object.entries(this.show).forEach(([k, v]) => this.showData[k](song, v))));
+            Object.entries(this.visible).forEach(([k, v]) => this.fields[k].show(song, v))));
     },
 
-    render: async function(container) {
+    renderOptions: function(container) {
+        container.innerHTML = '';
+        Object.values(this.options).forEach(option => {
+            let div = document.createElement('div');
+            div.className = 'option';
+            div.innerHTML += `<div>${option.display}</div>`;
+            div.appendChild(option.render());
+            container.appendChild(div);
+        });
+    },
+
+    renderTable: async function(container) {
+        container.innerHTML = '';
+
+        if (this.player.userId)
+            container.innerHTML += `<h3 style="margin-top: 0">${user_info.username}</h3>`;
+
         this.groups.forEach(group => {
-            let songs, levelLamp, avgPercentage, recordCount;
+            let songs, levelLamp, avgPercentage, dataCount;
             group.songs.forEach(song => {
-                let record = player.data.get(song.key);
-                if (record && (record.lamp !== 'NO-PLAY' || RANKS.indexOf(record.rank) > -1))
-                    ++recordCount;
-                else
-                    record = {lamp: 'NO-PLAY', rank: '', percentage: 0};
+                if (song.playerData && (song.playerData.lamp !== 'NO-PLAY' || RANKS.indexOf(song.playerData.rank) > -1))
+                    ++dataCount;
+                //song.playerData = {lamp: 'NO-PLAY', rank: '', percentage: 0};
                 let divSong = document.createElement('div');
                 divSong.className = 'song';
-                if (this.show.title)
-                    divSong.innerHTML += `<span class="title">${song.title}</span>`;
-                let right = document.createElement('div');
-                right.className = 'right';
-                if (this.show.rank)
-                    right.innerHTML += `<span class="rank ${record.rank.toLowerCase()}">${record.rank}</span>`;
-                if (this.show.percentage)
-                    right.innerHTML += `<span class="rank ${record.rank.toLowerCase()}" style="transform: scaleX(0.9)">${parseInt(record.percentage)}%</span>`;
-                if (this.show.lamp)
-                    right.innerHTML += `<span class="lamp ${record.lamp.toLowerCase()}"></span>`;
+                divSong.innerHTML += `
+<span class="title">${song.title}</span>
+<div class="right">
+<span class="rank ${song.playerData.rank.toLowerCase()}">${song.playerData.rank}</span>
+<span class="rank ${song.playerData.rank.toLowerCase()}" style="transform: scaleX(0.9)">${parseInt(song.playerData.percentage)}%</span>
+<span class="lamp ${song.playerData.lamp.toLowerCase()}"></span>
+</div>
+`;
                 song.domObj = divSong;
                 songs.push(divSong);
-                if (LAMPS.indexOf(record.lamp) < LAMPS.indexOf(levelLamp))
-                    levelLamp = record.lamp;
-                avgPercentage += record.percentage;
+                if (LAMPS.indexOf(song.playerData.lamp) < LAMPS.indexOf(levelLamp))
+                    levelLamp = song.playerData.lamp;
+                avgPercentage += song.playerData.percentage;
             }, ['', LAMPS[LAMPS.length - 1], 0]);
-            avgPercentage /= recordCount;
+            avgPercentage /= dataCount;
             const avgRank = RANKS[Math.trunc(avgPercentage / 100 * 9)];
 
             const group = document.createElement('div');
@@ -133,6 +173,6 @@ DiffTable.prototype = {
             });
         });
 
-        this.order();
+        this.sort();
     },
 }

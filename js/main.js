@@ -7,11 +7,15 @@ const DOM = {
     body: document.body,
     formOptions: document.getElementById('form_options'),
     selectTable: document.getElementById('select_table'),
-    selectOptions: document.getElementById('select_options'),
+    options: document.getElementById('options'),
     inputId: document.getElementById('user_id'),
     content: document.getElementById('content'),
     screenshot: document.getElementById('screenshot'),
 };
+
+const TABLES = [
+    {}
+];
 
 window.onload = async () => {
     ['iidx', 'bms']

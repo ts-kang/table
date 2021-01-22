@@ -124,16 +124,21 @@ h3 {
     padding: .375rem .75rem;
 }
 
-.header {
+.header, .footer {
     margin: .3rem;
 }
 
-.links {
-    margin: 2rem .3rem;
+.footer {
+    padding: 1rem 0;
+    border-top: 1px solid #434857;
 }
 
-.links div {
-    margin: .5rem 0;
+.ext-links {
+    margin: .3rem;
+}
+
+.ext-links div {
+    margin: .5rem;
 }
 
 .menu {
