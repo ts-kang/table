@@ -195,7 +195,7 @@ h3 {
     line-height: 2rem;
 }
 
-.container {
+.group {
     position: relative;
     display: flex;
     width: 100%;

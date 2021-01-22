@@ -46,6 +46,7 @@ async function buildTable(e) {
     }
 
     const parsedTable = await table.parse(options);
+    parsedTable.levels = parsedTable.levels.reverse();
 
     if (table.playerData) {
         const dataSource = table.playerData[document.getElementById('select_data').value];
@@ -89,7 +90,7 @@ function renderTable(table, playerData) {
         else
             DOM.content.innerHTML = `<h3 style="margin-top: 0">${playerData.username}</h3>`;
     }
-    
+
     table.levels.forEach(row => {
         // <span class="rank ${song.rank.toLowerCase()}">${song.rank}</span>
         // <span class="rank ${song.rank.toLowerCase()}" style="transform: scaleX(0.9)">${parseInt(song.percentage)}%</span>
@@ -97,14 +98,14 @@ function renderTable(table, playerData) {
             const record = playerData.records.get(song.title + (song.difficulty ? '\t' + song.difficulty : ''));
             return [
                 html + `
-<div class="song">
-  <span class="title ${song.difficulty.toLowerCase()}">${song.title}</span>
+<div class="song" style="order: ${-LAMPS.indexOf(record ? record.lamp : 'NO-PLAY')}">
+  <span class="title ${song.difficulty ? song.difficulty.toLowerCase() : ''}">${song.title}</span>
 <div class="right">
 <span class="lamp ${record ? record.lamp.toLowerCase() : 'no-play'}"></span>
 </div>
 </div>`,
                 LAMPS.indexOf(record ? record.lamp : 'NO-PLAY') < LAMPS.indexOf(lamp) ? (record ? record.lamp : 'NO-PLAY') : lamp,
-                percentage + (record ? record.percentage : 0)
+                percentage + (record ? record.percentage : 0),
             ];
         }, ['', LAMPS[LAMPS.length - 1], 0]);
         avgPercentage /= row.songs.length;

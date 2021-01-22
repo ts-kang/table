@@ -85,10 +85,8 @@ export const playerData = {
         const url = `http://ereter.net/iidxplayerdata/${options.userId}/level/${options.level}/`;
 
         const html = new DOMParser().parseFromString(await util.readPage(url), 'text/html');
-
         data.username = html.querySelector('.content > h3').innerText;
-
-        const tables = html.querySelectorAll('[data-sort=table]');
+        const tables = html.querySelectorAll('[data-sort^=table]');
         const dataTable = tables[tables.length - 1];
         dataTable.querySelectorAll('tbody:not(.tablesorter-no-sort)').forEach(tbody => {
             var level;
@@ -155,90 +153,94 @@ export const playerData = {
 // for IIDX and Insane BMS analytics page
 // use json parser for Overjoy table
 async function ereterParser_table(url, iidx, id) {
-        const html = new DOMParser().parseFromString(await util.readPage(url), 'text/html');
+    const html = new DOMParser().parseFromString(await util.readPage(url), 'text/html');
 
-        var diffTable = {
-            from: '<span style="color: #ce8ef9"><span style="color: #91e1ff">ereter</span>\'s dp laboratory</span> & difficulty table from ' + iidx ? 'SNJ@KMZS beatmaniaIIDX DP非公式難易度表' : 'GENOCIDE - bms難易度表 -',
-            prefix: iidx ? '☆' : '★',
-            indices: new Map(),
-            levels: [],
-        };
+    var diffTable = {
+        from: '<span style="color: #ce8ef9"><span style="color: #91e1ff">ereter</span>\'s dp laboratory</span> & difficulty table from ' + iidx ? 'SNJ@KMZS beatmaniaIIDX DP非公式難易度表' : 'GENOCIDE - bms難易度表 -',
+        prefix: iidx ? '☆' : '★',
+        indices: new Map(),
+        levels: [],
+    };
 
-        if (id) {
-            let user = html.querySelector('.content > h3');
-            diffTable.userInfo = {};
-            diffTable.userInfo.id = id;
-            diffTable.userInfo.username = user.innerText.replace(/ - .*$/, '');
-            diffTable.userInfo.clearAbility = user.querySelector('span').innerText.substring(1);
-            diffTable.userInfo.clearAbility_color = user.querySelector('span').style.color;
-        }
+    if (id) {
+        const user = html.querySelector('.content > h3');
+        diffTable.userInfo = {};
+        diffTable.userInfo.id = id;
+        diffTable.userInfo.username = user.innerText.replace(/ - .*$/, '');
+        diffTable.userInfo.clearAbility = user.querySelector('span').innerText.substring(1);
+        diffTable.userInfo.clearAbility_color = user.querySelector('span').style.color;
+    }
 
-        const tables = html.querySelectorAll(id ? '[data-sort=table-perlevel]' : '[data-sort=table]');
-        const tableAnalytics = tables[tables.length - 1];
+    const tables = html.querySelectorAll('[data-sort^=table]');
+    const tableAnalytics = tables[tables.length - 1];
 
-        tableAnalytics.querySelectorAll('tbody:not(.tablesorter-no-sort)').forEach(tbody => {
-            var level;
-            const songs = Array.from(tbody.querySelectorAll('tr')).map((row, i) => {
-                const fields = row.querySelectorAll('td');
-                if (!level)
-                    level = fields[0].innerText.substring(1);
-                var ret = {
-                    ereterID: parseInt(fields[1].querySelector('a').href.match(/ranking\/([\d]+)\//)[1]),
-                    // [EASY, HARD, EX-HARD] for IIDX, [EASY, HARD] for BMS
-                    ereterEst: (iidx ? [3, 5, 7] : [4, 6])
-                        .map(i => parseFloat(fields[i].querySelector('span').innerText.substring(1))),
-                    ereterColor: (iidx ? [3, 5, 7] : [4, 6])
-                        .map(i => fields[i].querySelector('span').style.color.match(/\b[\d]+\b/g)
-                             .map(c => parseInt(c))),
-                };
-                if (iidx) {
-                    ret.title = fields[1].innerText.replace(/ \([A-Z]+\)$/, '');
-                    ret.difficulty = fields[1].innerText.match(/ \(([A-Z]+)\)$/)[1];
-                    // ereter analytics page is available only for level 12 currently
-                    ret.officialLevel = 12;
-                } else {
-                    ret.title = fields[1].innerText;
-                }
-                diffTable.indices.set(ret.title + '\t' + ret.difficulty, [diffTable.levels.length, i]);
-                return ret;
-            });
+    tableAnalytics.querySelectorAll('tbody:not(.tablesorter-no-sort)').forEach(tbody => {
+        var level;
+        const songs = Array.from(tbody.querySelectorAll('tr')).map((row, i) => {
+            const fields = row.querySelectorAll('td');
             if (!level)
-                return;
-            diffTable.levels.push({
-                level: level,
-                songs: songs,
-            });
+                level = fields[0].innerText.substring(1);
+            var ret = {
+                ereterID: parseInt(fields[1].querySelector('a').href.match(/ranking\/([\d]+)\//)[1]),
+                // [EASY, HARD, EX-HARD] for IIDX, [EASY, HARD] for BMS
+                ereterEst: (iidx ? [3, 5, 7] : [4, 6])
+                    .map(i => parseFloat(fields[i].querySelector('span').innerText.substring(1))),
+                ereterColor: (iidx ? [3, 5, 7] : [4, 6])
+                    .map(i => fields[i].querySelector('span').style.color.match(/\b[\d]+\b/g)
+                         .map(c => parseInt(c))),
+            };
+            if (iidx) {
+                ret.title = fields[1].innerText.replace(/ \([A-Z]+\)$/, '');
+                ret.difficulty = fields[1].innerText.match(/ \(([A-Z]+)\)$/)[1];
+                // ereter analytics page is available only for level 12 currently
+                ret.officialLevel = 12;
+            } else {
+                ret.title = fields[1].innerText;
+            }
+            diffTable.indices.set(ret.title + '\t' + ret.difficulty, [diffTable.levels.length, i]);
+            return ret;
         });
+        if (!level)
+            return;
+        diffTable.levels.push({
+            level: level,
+            songs: songs,
+        });
+    });
 
-        return diffTable;
+    return diffTable;
 }
 
-async function ereterBMSParser_playerdata(url) {
-        // title can be duplicated,
-        // ('title', {rank, percentage, lamp})
-        var dataMap = new Map();
+async function ereterBMSParser_playerdata(url, id) {
+    // title can be duplicated,
+    // ('title', {rank, percentage, lamp})
+    var data = {
+        userId: id,
+        records: new Map(),
+    };
 
-        const html = new DOMParser().parseFromString(await util.readPage(url), 'text/html');
-        const tables = html.querySelectorAll('[data-sort=table]');
-        const dataTable = tables[tables.length - 1];
-        dataTable.querySelectorAll('tbody:not(.tablesorter-no-sort)').forEach(tbody => {
-            var level;
-            var songs = [];
-            tbody.querySelectorAll('tr').forEach(row => {
-                const fields = row.querySelectorAll('td');
-                const title = fields[1].innerText;
-                dataMap.set(title, {
-                    rank: fields[5].children.length > 0
-                        ? fields[5].querySelectorAll('span span span')[0].innerText
-                        : '',
-                    percentage: fields[5].children.length > 0
-                        ? parseFloat(fields[5].querySelectorAll('span span span')[1].innerText)
-                        : 0,
-                    lamp: fields[6].innerText.toUpperCase().trim() || 'NO-PLAY',
-                    bp: fields[7].innerText.trim() !== '' ? parseInt(fields[7].innerText) : -1,
-                });
+    const html = new DOMParser().parseFromString(await util.readPage(url), 'text/html');
+    data.username = html.querySelector('.content > h3').innerText;
+    const tables = html.querySelectorAll('[data-sort^=table]');
+    const dataTable = tables[tables.length - 1];
+    dataTable.querySelectorAll('tbody:not(.tablesorter-no-sort)').forEach(tbody => {
+        var level;
+        var songs = [];
+        tbody.querySelectorAll('tr').forEach(row => {
+            const fields = row.querySelectorAll('td');
+            const title = fields[1].innerText;
+            data.records.set(title, {
+                rank: fields[5].children.length > 0
+                    ? fields[5].querySelectorAll('span span span')[0].innerText
+                    : '',
+                percentage: fields[5].children.length > 0
+                    ? parseFloat(fields[5].querySelectorAll('span span span')[1].innerText)
+                    : 0,
+                lamp: fields[6].innerText.toUpperCase().trim() || 'NO-PLAY',
+                bp: fields[7].innerText.trim() !== '' ? parseInt(fields[7].innerText) : -1,
             });
         });
+    });
 
-        return dataMap;
+    return data;
 }
