@@ -3,7 +3,7 @@ import * as util from '../util.js'
 
 const TYPE = { IIDX: 0, BMS: 1 };
 
-function EreterTable(type) {
+function TableEreter(type) {
     DiffTable.call(this);
     this.type = type;
     this.prefix = this.type === TYPE.BMS ? '★' : '☆';
@@ -19,17 +19,19 @@ function EreterTable(type) {
     this.sortBy = ['+title', '-lamp', '-ereterEst'];
 }
 
-EreterTable.prototype = Object.create(DiffTable.prototype);
-EreterTable.prototype.constructor = EreterTable;
+TableEreter.prototype = Object.create(DiffTable.prototype);
+TableEreter.prototype.constructor = TableEreter;
 
-EreterTable.prototype.renderTable = async function(container) {
+TableEreter.prototype.renderTable = async function(container) {
     await DiffTable.prototype.renderTable.call(this, container);
     const h3 = container.querySelector('h3');
     if (h3)
         h3.innerHTML += ` - <span style="color: ${this.player.clearAbility_color}">★${this.player.clearAbility}</span>`;
 }
 
-EreterTable.prototype.parse = async function() {
+TableEreter.prototype.parse = async function() {
+    await DiffTable.prototype.parse.call(this);
+
     const url = this.type === TYPE.IIDX
           ? (this.player.userId
              ? `http://ereter.net/iidxplayerdata/${this.player.userId}/analytics/perlevel/`
@@ -87,9 +89,13 @@ EreterTable.prototype.parse = async function() {
     this.groups.reverse();
 }
 
-export function EreterIIDXTable() {
-    EreterTable.call(this, TYPE.IIDX);
+export function TableEreterIIDX() {
+    TableEreter.call(this, TYPE.IIDX);
     delete this.dataSources.lr2songdb;
+    this.dataSources.csv = {
+        display: 'CSV',
+        instance: async () => await import('../data_source/data_csv.js').then(m => new m.DataCSV(this)),
+    };
     let _super_render = this.options.level.render;
     this.options.level.render = () => {
         let select = _super_render.call(this.options.level);
@@ -98,13 +104,13 @@ export function EreterIIDXTable() {
     };
 }
 
-EreterIIDXTable.prototype = Object.create(EreterTable.prototype);
-EreterIIDXTable.prototype.constructor = EreterIIDXTable;
+TableEreterIIDX.prototype = Object.create(TableEreter.prototype);
+TableEreterIIDX.prototype.constructor = TableEreterIIDX;
 
-export function EreterBMSInsaneTable() {
-    EreterTable.call(this, TYPE.BMS);
+export function TableEreterBMSInsane() {
+    TableEreter.call(this, TYPE.BMS);
     delete this.options.level;
 }
 
-EreterBMSInsaneTable.prototype = Object.create(EreterTable.prototype);
-EreterBMSInsaneTable.prototype.constructor = EreterBMSInsaneTable;
+TableEreterBMSInsane.prototype = Object.create(TableEreter.prototype);
+TableEreterBMSInsane.prototype.constructor = TableEreterBMSInsane;

@@ -35,32 +35,15 @@ export function DiffTable() {
     this.sortBy = ['+title', '-lamp'];
     this.group = 'level';
     this.prefix = '☆';
-    this.player = {
-        userId: undefined,
-        username: undefined,
-    };
     this.groups = [];
     this.dataSources = {
         lr2songdb: {
             display: 'LR2 song.db',
-            newInstance: async () => await import('../data/lr2_song_db.js').then(m => new m.LR2SongDB()),
+            instance: async () => await import('../data/lr2_song_db.js').then(m => new m.LR2SongDB()),
         },
     };
+    this.data = undefined;
     this.options = {
-        dataSource: {
-            display: 'Player Data Source',
-            value: Object.keys(this.dataSources)[0],
-            render: () => {
-                let select = document.createElement('select');
-                select.innerHTML = Object.entries(this.dataSources)
-                    .map(([key, src]) => `<option value="${key}">${src.display}</option>`)
-                    .join('');
-                const option = select.querySelector(`[value="${this.options.dataSource.value}"]`);
-                if (option)
-                    option.selected = true;
-                return select;
-            }
-        },
         level: {
             display: 'Level',
             value: 12,
@@ -89,9 +72,8 @@ DiffTable.prototype = {
         });
     },
 
-    // json parser for bms
     async parse() {
-        throw new Error('not implemented');
+        this.data.parse();
     },
 
     updateDisplay() {
@@ -101,7 +83,40 @@ DiffTable.prototype = {
         })));
     },
 
-    renderOptions(container) {
+    _renderFields(container) {
+        Object.entries(this.fields).forEach(([key, field]) => {
+            
+        });
+    },
+
+    async _renderDataSource(container) {
+        let dataSource = document.createElement('div');
+        dataSource.className = 'option';
+        dataSource.innerHTML = '<div>Player Data Source</div>';
+
+        let select = document.createElement('select');
+        select.innerHTML = Object.entries(this.dataSources)
+            .map(([key, src]) => `<option value="${key}">${src.display}</option>`)
+            .join('');
+        dataSource.appendChild(select);
+        container.appendChild(dataSource);
+
+        let dataOptions = document.createElement('div');
+        container.appendChild(dataOptions);
+
+        const onchange = async () => {
+            dataOptions.innerHTML = '';
+            let instance = this.dataSources[select.value].instance;
+            if(typeof instance === 'function')
+                instance = this.dataSources[select.value].instance = await instance();
+            this.data = instance;
+            this.data.renderOptions(dataOptions);
+        }
+        select.addEventListener('change', onchange);
+        await onchange();
+    },
+
+    async renderOptions(container) {
         container.innerHTML = '';
         Object.values(this.options).forEach(option => {
             let div = document.createElement('div');
@@ -111,6 +126,9 @@ DiffTable.prototype = {
             div.appendChild(option.render());
             container.appendChild(div);
         });
+
+        await this._renderDataSource(container);
+        this._renderFields(container);
     },
 
     async renderTable(container) {

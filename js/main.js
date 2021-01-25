@@ -1,8 +1,5 @@
 import * as tables from './difficulty_table.js';
 
-const LAMPS = ['NO-PLAY', 'FAILED', 'ASSIST', 'EASY', 'CLEAR', 'HARD', 'EX-HARD', 'FULLCOMBO'];
-const RANKS = ['F', 'F', 'E', 'D', 'C', 'B', 'A', 'AA', 'AAA'];
-
 const DOM = {
     body: document.body,
     formOptions: document.getElementById('form_options'),
@@ -14,9 +11,9 @@ const DOM = {
 };
 
 var TABLES = {
-    iidx_ereter_analytics: async () => await import('./table/table_ereter.js').then(m => new m.EreterIIDXTable()),
-    iidx_snjkmzs_rank: async () => await import('./table/table_snjkmzs.js').then(m => new m.SnjkmzsRankTable()),
-    bms_ereter_insane_analytics: async () => await import('./table/table_ereter.js').then(m => new m.EreterBMSInsaneTable()),
+    iidx_ereter_analytics: async () => await import('./table/table_ereter.js').then(m => new m.TableEreterIIDX()),
+    iidx_snjkmzs_rank: async () => await import('./table/table_snjkmzs.js').then(m => new m.TableSnjkmzsRank()),
+    bms_ereter_insane_analytics: async () => await import('./table/table_ereter.js').then(m => new m.TableEreterBMSInsane()),
     bms_custom: async () => await import('./table/table_base.js').then(m => new m.DiffTable()),
 };
 
