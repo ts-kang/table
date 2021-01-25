@@ -72,9 +72,7 @@ DiffTable.prototype = {
         });
     },
 
-    async parse() {
-        this.data.parse();
-    },
+    async parse() {},
 
     updateDisplay() {
         this.groups.forEach(group => group.songs.forEach(song => Object.values(this.fields).forEach(field => {
@@ -134,10 +132,10 @@ DiffTable.prototype = {
     async renderTable(container) {
         container.innerHTML = '';
 
-        if (this.player.username !== undefined)
-            container.innerHTML += `<h3 style="margin-top: 0">${this.player.username}</h3>`;
+        if (this.data.player.username !== undefined)
+            container.innerHTML += `<h3 style="margin-top: 0">${this.data.player.username}</h3>`;
 
-        if (this.player.userId === undefined) {
+        if (this.data.player.userId === undefined) {
             this.fields.rank.visible = false;
             this.fields.percentage.visible = false;
         }
@@ -148,10 +146,10 @@ DiffTable.prototype = {
             let avgPercentage = 0;
             let dataCount = 0;
             group.songs.forEach(song => {
-                if (song.playerData && (song.playerData.lamp !== 'NO-PLAY' || RANKS.indexOf(song.playerData.rank) > -1))
-                    ++dataCount;
-                else
+                if (!song.playerData)
                     song.playerData = {lamp: 'NO-PLAY', rank: '', percentage: 0};
+                if (song.playerData.lamp !== 'NO-PLAY' || RANKS.indexOf(song.playerData.rank) > -1)
+                    ++dataCount;
                 let divSong = document.createElement('div');
                 divSong.className = 'song';
                 divSong.innerHTML += `

@@ -1,6 +1,7 @@
-export function DataSource(table) {
-    this.table = table;
+export function DataSource() {
     this.options = {};
+    this.player = {};
+    this.records = new Map();
 }
 
 DataSource.prototype = {
@@ -14,6 +15,10 @@ DataSource.prototype = {
     },
 
     async parse() {
+        
+    },
+
+    apply(table) {
         
     },
 }

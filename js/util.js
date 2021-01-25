@@ -11,3 +11,12 @@ export async function readPage(url, data={}) {
 
     return await response.text();
 }
+
+export async function loadLibrary(relpath) {
+    return new Promise((resolve, _) => {
+        let script = document.createElement('script');
+        script.onload = () => resolve();
+        script.src = './js/lib/' + relpath;
+        document.head.appendChild(script);
+    });
+}

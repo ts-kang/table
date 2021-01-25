@@ -1,7 +1,8 @@
+import * as util from '../util.js';
 import { DataSource } from './data_base.js';
 
-export function DataCSV(table) {
-    DataSource.call(this, table);
+export function DataCSV() {
+    DataSource.call(this);
     this.options.csvFile = {
         value: undefined,
         render() {
@@ -31,16 +32,46 @@ export function DataCSV(table) {
 }
 
 DataCSV.prototype = Object.create(DataSource.prototype);
-DataCSV.prototype.constructor = DataSource;
+DataCSV.prototype.constructor = DataCSV;
 
 DataCSV.prototype.parse = async function() {
-    let Papa = import('../lib/papaparse.min.js').then(m => m.Papa);
-    Papa.parse(this.options.csvFile.value, {
+    await util.loadLibrary('papaparse.min.js');
+
+    await new Promise((resolve, _) => Papa.parse(this.options.csvFile.value, {
         header: true,
         step: row => {
-            console.log(row.data);
-        },
-    });
+            if (row.errors.length > 0)
+                return;
 
-    this.username = this.options.username.value;
+            const title = row.data['タイトル']
+                  .replace('，', ',');
+            const version = row.data['バージョン'];
+            ['BEGINNER', 'NORMAL', 'HYPER', 'ANOTHER', 'LEGGENDARIA'].forEach(diff => {
+                const lamp = row.data[diff + ' クリアタイプ']
+                      .replace(/ CLEAR$/, '')
+                      .replace('EX HARD', 'EX-HARD')
+                      .replace('NO PLAY', 'NO-PLAY');
+                const rank = row.data[diff + ' DJ LEVEL']
+                      .replace('---', '');
+                const score = row.data[diff + ' スコア'];
+
+                // ('title\tdifficulty', {lamp, rank, score})
+                if (lamp != 'NO-PLAY' || rank)
+                    this.records.set(title + '\t' + diff, {lamp: lamp, rank: rank, score: score});
+            });
+        },
+        complete: () => resolve(),
+    }));
+
+    this.player.username = this.options.username.value;
 };
+
+DataCSV.prototype.apply = function(table) {
+    table.groups.forEach(group => group.songs.forEach(song => {
+        const data = this.records.get(song.title + '\t' + song.difficulty);
+        if (data)
+            song.playerData = data;
+        else
+            song.playerData = {lamp: 'NO-PLAY', rank: '', percentage: 0};
+    }));
+}

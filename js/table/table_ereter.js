@@ -16,7 +16,7 @@ function TableEreter(type) {
         visible: true,
         updateDisplay(song) { song.domObj.style.backgroundColor = this.visible ? `rgba(${song.ereterColor[0].join(', ')}, 0.3)` : '' },
     };
-    this.sortBy = ['+title', '-lamp', '-ereterEst'];
+    this.sortBy = ['+title', '-ereterEst', '-lamp'];
 }
 
 TableEreter.prototype = Object.create(DiffTable.prototype);
@@ -25,29 +25,30 @@ TableEreter.prototype.constructor = TableEreter;
 TableEreter.prototype.renderTable = async function(container) {
     await DiffTable.prototype.renderTable.call(this, container);
     const h3 = container.querySelector('h3');
-    if (h3)
-        h3.innerHTML += ` - <span style="color: ${this.player.clearAbility_color}">★${this.player.clearAbility}</span>`;
+    if (h3 && this.data.player.clearAbility)
+        h3.innerHTML += ` - <span style="color: ${this.data.player.clearAbility_color}">★${this.data.player.clearAbility}</span>`;
 }
 
 TableEreter.prototype.parse = async function() {
-    await DiffTable.prototype.parse.call(this);
-
+    this.groups = [];
+    
     const url = this.type === TYPE.IIDX
-          ? (this.player.userId
-             ? `http://ereter.net/iidxplayerdata/${this.player.userId}/analytics/perlevel/`
+          ? (this.data.options.userId
+             ? `http://ereter.net/iidxplayerdata/${this.data.options.userId.value}/analytics/perlevel/`
              : `http://ereter.net/iidxsongs/analytics/perlevel/`)
-          : (this.player.userId
-             ? `http://ereter.net/bmsplayerdata/${this.player.userId}/dpbms/analytics/perlevel/`
+          : (this.data.options.userId
+             ? `http://ereter.net/bmsplayerdata/${this.data.options.userId.value}/dpbms/analytics/perlevel/`
              : `http://ereter.net/bmssongs/dpbms/analytics/perlevel/`);
     const html = new DOMParser().parseFromString(await util.readPage(url), 'text/html');
 
     this.from = '<span style="color: #ce8ef9"><span style="color: #91e1ff">ereter</span>\'s dp laboratory</span> & difficulty table from ' + this.type === TYPE.IIDX ? 'SNJ@KMZS beatmaniaIIDX DP非公式難易度表' : '';
 
-    if (this.player.userId) {
+    if (this.data.options.userId) {
         const user = html.querySelector('.content > h3');
-        this.player.username = user.innerText.replace(/ - .*$/, '');
-        this.player.clearAbility = user.querySelector('span').innerText.substring(1);
-        this.player.clearAbility_color = user.querySelector('span').style.color;
+        this.data.player.userId = this.data.options.userId.value;
+        this.data.player.username = user.innerText.replace(/ - .*$/, '');
+        this.data.player.clearAbility = user.querySelector('span').innerText.substring(1);
+        this.data.player.clearAbility_color = user.querySelector('span').style.color;
     }
 
     const tables = html.querySelectorAll('[data-sort^=table]');
@@ -59,7 +60,7 @@ TableEreter.prototype.parse = async function() {
             const fields = row.querySelectorAll('td');
             if (!level)
                 level = fields[0].innerText.substring(1);
-            const offset = this.player.userId ? 1 : 0;
+            const offset = this.data.player.userId ? 1 : 0;
             // [EASY, HARD, EX-HARD] for IIDX, [EASY, HARD] for BMS
             const estIndices = this.type === TYPE.IIDX ? [2, 4, 6] : [3, 5];
             var ret = {
@@ -87,6 +88,9 @@ TableEreter.prototype.parse = async function() {
     });
 
     this.groups.reverse();
+
+    await this.data.parse();
+    this.data.apply(this);
 }
 
 export function TableEreterIIDX() {

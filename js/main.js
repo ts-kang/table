@@ -5,7 +5,6 @@ const DOM = {
     formOptions: document.getElementById('form_options'),
     selectTable: document.getElementById('select_table'),
     options: document.getElementById('options'),
-    inputId: document.getElementById('user_id'),
     content: document.getElementById('content'),
     screenshot: document.getElementById('screenshot'),
 };
@@ -36,7 +35,7 @@ async function buildTable(e) {
     e.preventDefault();
 
     const table = TABLES[DOM.selectTable.value];
-    table.player.userId = DOM.inputId.value.replace(/[\D]/g, '');
+    //table.player.userId = DOM.inputId.value.replace(/[\D]/g, '');
     await table.parse();
     console.log(table.groups);
     await table.renderTable(DOM.content);
