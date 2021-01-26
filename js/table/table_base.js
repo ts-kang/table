@@ -6,6 +6,7 @@ const RANKS = ['F', 'F', 'E', 'D', 'C', 'B', 'A', 'AA', 'AAA'];
 export function DiffTable() {
     this.name = undefined;
     this.display = undefined;
+    this.cite = undefined;
     this.fields = {
         title: {
             display: 'Title',
@@ -37,9 +38,9 @@ export function DiffTable() {
     this.prefix = '☆';
     this.groups = [];
     this.dataSources = {
-        lr2songdb: {
-            display: 'LR2 song.db',
-            instance: async () => await import('../data/lr2_song_db.js').then(m => new m.LR2SongDB()),
+        none: {
+            display: 'None',
+            instance: async () => await import('../data_source/data_base.js').then(m => new m.DataSource()),
         },
     };
     this.data = undefined;
@@ -75,10 +76,18 @@ DiffTable.prototype = {
     async parse() {},
 
     updateDisplay() {
-        this.groups.forEach(group => group.songs.forEach(song => Object.values(this.fields).forEach(field => {
-            if (field.visible !== undefined && field.updateDisplay)
-                field.updateDisplay(song);
-        })));
+        this.groups.forEach(group => group.songs.forEach(song => {
+            Object.values(this.fields).forEach(field => {
+                if (field.visible !== undefined && field.updateDisplay)
+                    field.updateDisplay(song);
+            });
+            const title = song.domObj.querySelector('.title');
+            const divWidth = song.domObj.offsetWidth - (song.domObj.querySelector('.right').offsetWidth || 0) - 9;
+            if (title.offsetWidth > divWidth) {
+                let widthScale = Math.max(divWidth / title.offsetWidth, 0.6);
+                title.style.transform = `scaleX(${widthScale})`;
+            }
+        }));
     },
 
     _renderFields(container) {
@@ -93,9 +102,11 @@ DiffTable.prototype = {
         dataSource.innerHTML = '<div>Player Data Source</div>';
 
         let select = document.createElement('select');
-        select.innerHTML = Object.entries(this.dataSources)
-            .map(([key, src]) => `<option value="${key}">${src.display}</option>`)
-            .join('');
+        let arr = Object.entries(this.dataSources)
+            .map(([key, src]) => `<option value="${key}">${src.display}</option>`);
+        if (Object.keys(this.dataSources)[0] === 'none')
+            arr.push(arr.shift());
+        select.innerHTML = arr.join('');
         dataSource.appendChild(select);
         container.appendChild(dataSource);
 
@@ -132,13 +143,11 @@ DiffTable.prototype = {
     async renderTable(container) {
         container.innerHTML = '';
 
-        if (this.data.player.username !== undefined)
-            container.innerHTML += `<h3 style="margin-top: 0">${this.data.player.username}</h3>`;
+        if (this.display !== undefined)
+            container.innerHTML += `<h3 style="font-size: 2.5rem; text-align: center; color: #ccccfd6; margin: 0; margin-bottom: 1rem;">${this.display}</h3>`;
 
-        if (this.data.player.userId === undefined) {
-            this.fields.rank.visible = false;
-            this.fields.percentage.visible = false;
-        }
+        if (this.data.player.username !== undefined)
+            container.innerHTML += `<h3 style="margin: 0; margin-bottom: -.5rem;">${this.data.player.username}</h3>`;
 
         this.groups.forEach(group => {
             let songs = [];
@@ -160,6 +169,8 @@ DiffTable.prototype = {
 <span class="lamp ${song.playerData.lamp.toLowerCase()}"></span>
 </div>
 `;
+                if (song.difficulty)
+                    divSong.querySelector('.title').classList.add(song.difficulty.toLowerCase());
                 song.domObj = divSong;
                 songs.push(divSong);
                 if (LAMPS.indexOf(song.playerData.lamp) < LAMPS.indexOf(levelLamp))
@@ -172,7 +183,7 @@ DiffTable.prototype = {
             const divGroup = document.createElement('div');
             divGroup.className = 'group';
             divGroup.innerHTML = `
-<div class="level">
+<div class="label">
   <span>
     ${this.prefix}${group.name}
   </span>
@@ -184,17 +195,26 @@ DiffTable.prototype = {
 `;
             divGroup.querySelector('.songs').append(...songs);
             container.appendChild(divGroup);
-            group.songs.forEach(song => {
-                const title = song.domObj.querySelector('.title');
-                const divWidth = song.domObj.offsetWidth - (song.domObj.querySelector('.right').offsetWidth || 0) - 3;
-                if (title.offsetWidth > divWidth) {
-                    let widthScale = Math.max(divWidth / title.offsetWidth, 0.6);
-                    title.style.transform = `scaleX(${widthScale})`;
-                }
-            });
         });
+
+        if (this.cite) {
+            let cite = document.createElement('div');
+            cite.className = 'cite';
+            cite.innerHTML = this.cite;
+            container.appendChild(cite);
+        }
+
+        let info = document.createElement('div');
+        info.className = 'cite';
+        info.style.float = 'right';
+        info.innerHTML = `generated from <span style="color: #999bcc">nyan.ch/table/</span> on ${new Date().toISOString().replace(/^([\d-]+)[\w][\d:.]+[\w]$/, '$1')}`;
+        container.appendChild(info);
+
+        let clear = document.createElement('div');
+        clear.style.clear = 'both';
+        container.appendChild(clear);
 
         this.updateDisplay();
         this.sort();
     },
-}
+};

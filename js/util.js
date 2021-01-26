@@ -14,8 +14,13 @@ export async function readPage(url, data={}) {
 
 export async function loadLibrary(relpath) {
     return new Promise((resolve, _) => {
+        if (document.querySelector(`script[data-lib="${relpath}"]`)) {
+            resolve();
+            return;
+        }
         let script = document.createElement('script');
         script.onload = () => resolve();
+        script.dataset.lib = relpath;
         script.src = './js/lib/' + relpath;
         document.head.appendChild(script);
     });

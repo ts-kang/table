@@ -110,6 +110,14 @@ h3 {
     padding: .5rem;
 }
 
+.cite {
+    float: left;
+    margin: 1.2rem 1px;
+    margin-bottom: 0;
+    font-size: 1rem;
+    color: #999baa;
+}
+
 .option {
     display: flex;
     align-items: center;
@@ -208,7 +216,7 @@ h3 {
     margin-top: 2rem;
 }
 
-.level {
+.label {
     position: relative;
     z-index: 10;
     margin: 1px;
@@ -253,7 +261,7 @@ h3 {
 .another { }
 .leggendaria { color: #ce8ef9 !important; }
 
-.level .right, .song .right {
+.label .right, .song .right {
     position: absolute;
     top: 0;
     right: 0;
@@ -264,7 +272,7 @@ h3 {
     overflow: hidden;
 }
 
-.level div {
+.label div {
     display: flex;
     justify-content: center;
     margin-top: -.6rem;
@@ -300,7 +308,7 @@ h3 {
 .rank:nth-child(2) {
     margin-left: -2px;
 }
-.level .rank {
+.label .rank {
     float: none;
     margin: 0;
     margin-left: 3px;

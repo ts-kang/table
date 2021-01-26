@@ -1,4 +1,5 @@
 import * as tables from './difficulty_table.js';
+import * as util from './util.js';
 
 const DOM = {
     body: document.body,
@@ -21,6 +22,7 @@ window.onload = async () => {
     onSelectTable();
 
     DOM.formOptions.addEventListener('submit', buildTable);
+    DOM.screenshot.addEventListener('click', takeScreenshot);
 };
 
 async function onSelectTable() {
@@ -91,6 +93,35 @@ async function buildTable(e) {
     }
     renderTable(table);
     */
+}
+
+async function takeScreenshot() {
+    await util.loadLibrary('html2canvas.min.js');
+
+    const download = document.querySelector('#download_screenshot');
+    if (download)
+        download.remove();
+    window.scrollTo(0, 0);
+    const canvas = await html2canvas(DOM.content, { backgroundColor: '#252830' });
+    if (/(iPad|iPhone|iPod)/g.test(navigator.userAgent)) {
+        let img = new Image();
+        img.width = img.width || img.naturalWidth;
+        img.height = img.height || img.naturalHeight;
+        img.src = canvas.toDataURL('image/png');
+        let newTab = window.open('');
+        newTab.document.body.appendChild(img);
+    } else {
+        canvas.toBlob(blob => {
+            let a = document.createElement('a');
+            a.id = 'download_screenshot';
+            a.style.display = 'block';
+            a.innerText = 'Download Link';
+            a.download = 'table_' + new Date().toISOString().replace(/^([\d-]+)[\w][\d:.]+[\w]$/, '$1') + '.png';
+            a.href = URL.createObjectURL(blob);
+            DOM.screenshot.after(a);
+            a.click();
+        }, 'image/png');
+    }
 }
 
 /*

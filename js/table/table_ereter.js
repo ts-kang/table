@@ -6,6 +6,11 @@ const TYPE = { IIDX: 0, BMS: 1 };
 function TableEreter(type) {
     DiffTable.call(this);
     this.type = type;
+    this.dataSources.ereter = {
+        display: 'ereter.net',
+        instance: async () => await import('../data_source/data_ereter.js').then(m => new m.DataEreter(this.type, this.options)),
+    };
+    this.cite = 'from <span style="color: #ce8ef9"><span style="color: #91e1ff">ereter</span>\'s dp laboratory</span> & difficulty table from ' + (this.type === TYPE.IIDX ? 'SNJ@KMZS beatmaniaIIDX DP非公式難易度表' : 'δ難易度表 - 発狂難易度表');
     this.prefix = this.type === TYPE.BMS ? '★' : '☆';
     this.fields.ereterEst = {
         display: 'Ereter Difficulty',
@@ -22,13 +27,6 @@ function TableEreter(type) {
 TableEreter.prototype = Object.create(DiffTable.prototype);
 TableEreter.prototype.constructor = TableEreter;
 
-TableEreter.prototype.renderTable = async function(container) {
-    await DiffTable.prototype.renderTable.call(this, container);
-    const h3 = container.querySelector('h3');
-    if (h3 && this.data.player.clearAbility)
-        h3.innerHTML += ` - <span style="color: ${this.data.player.clearAbility_color}">★${this.data.player.clearAbility}</span>`;
-}
-
 TableEreter.prototype.parse = async function() {
     this.groups = [];
     
@@ -41,8 +39,6 @@ TableEreter.prototype.parse = async function() {
              : `http://ereter.net/bmssongs/dpbms/analytics/perlevel/`);
     const html = new DOMParser().parseFromString(await util.readPage(url), 'text/html');
 
-    this.from = '<span style="color: #ce8ef9"><span style="color: #91e1ff">ereter</span>\'s dp laboratory</span> & difficulty table from ' + this.type === TYPE.IIDX ? 'SNJ@KMZS beatmaniaIIDX DP非公式難易度表' : '';
-
     if (this.data.options.userId) {
         const user = html.querySelector('.content > h3');
         this.data.player.userId = this.data.options.userId.value;
@@ -51,8 +47,7 @@ TableEreter.prototype.parse = async function() {
         this.data.player.clearAbility_color = user.querySelector('span').style.color;
     }
 
-    const tables = html.querySelectorAll('[data-sort^=table]');
-    const tableAnalytics = tables[tables.length - 1];
+    const tableAnalytics = Array.from(html.querySelectorAll('[data-sort^=table]')).pop();
 
     tableAnalytics.querySelectorAll('tbody:not(.tablesorter-no-sort)').forEach(tbody => {
         var level;
@@ -91,14 +86,28 @@ TableEreter.prototype.parse = async function() {
 
     await this.data.parse();
     this.data.apply(this);
-}
+};
+
+TableEreter.prototype.renderTable = async function(container) {
+    await DiffTable.prototype.renderTable.call(this, container);
+    const h3 = Array.from(container.querySelectorAll('h3')).pop();
+    if (h3 && this.data.player.clearAbility)
+        h3.innerHTML += ` - <span style="color: ${this.data.player.clearAbility_color}">★${this.data.player.clearAbility}</span>`;
+
+    container.querySelectorAll('.label').forEach((label, i) => {
+        const rgb = this.groups[i].songs
+              .reduce((t, song) => song.ereterColor[0].map((c, j) => t[j] + parseFloat(c)), [0.0, 0.0, 0.0])
+              .map(c => parseInt(c / this.groups[i].songs.length));
+        label.querySelector('span').style.color = `rgba(${rgb.join(', ')})`;
+    });
+};
 
 export function TableEreterIIDX() {
     TableEreter.call(this, TYPE.IIDX);
-    delete this.dataSources.lr2songdb;
+    this.display = 'IIDX DP Lv.12 Normal Clear';
     this.dataSources.csv = {
         display: 'CSV',
-        instance: async () => await import('../data_source/data_csv.js').then(m => new m.DataCSV(this)),
+        instance: async () => await import('../data_source/data_csv.js').then(m => new m.DataCSV()),
     };
     let _super_render = this.options.level.render;
     this.options.level.render = () => {
@@ -113,6 +122,7 @@ TableEreterIIDX.prototype.constructor = TableEreterIIDX;
 
 export function TableEreterBMSInsane() {
     TableEreter.call(this, TYPE.BMS);
+    this.display = 'DP Insane BMS';
     delete this.options.level;
 }
 

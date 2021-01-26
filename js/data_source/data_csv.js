@@ -34,6 +34,8 @@ export function DataCSV() {
 DataCSV.prototype = Object.create(DataSource.prototype);
 DataCSV.prototype.constructor = DataCSV;
 
+DataCSV.prototype.recordKey = song => song.title + '\t' + song.difficulty;
+
 DataCSV.prototype.parse = async function() {
     await util.loadLibrary('papaparse.min.js');
 
@@ -65,13 +67,3 @@ DataCSV.prototype.parse = async function() {
 
     this.player.username = this.options.username.value;
 };
-
-DataCSV.prototype.apply = function(table) {
-    table.groups.forEach(group => group.songs.forEach(song => {
-        const data = this.records.get(song.title + '\t' + song.difficulty);
-        if (data)
-            song.playerData = data;
-        else
-            song.playerData = {lamp: 'NO-PLAY', rank: '', percentage: 0};
-    }));
-}
