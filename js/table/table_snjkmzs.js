@@ -5,6 +5,10 @@ export function TableSnjkmzsRank() {
     DiffTable.call(this);
     this.prefix = '☆';
     this.cite = 'from SNJ@KMZS beatmaniaIIDX DP非公式難易度表';
+    this.dataSources.ereter = {
+        display: 'ereter.net',
+        instance: async () => await import('../data_source/data_ereter.js').then(m => new m.DataEreter(m.TYPE.IIDX, this.options)),
+    };
     this.dataSources.csv = {
         display: 'CSV',
         instance: async () => await import('../data_source/data_csv.js').then(m => new m.DataCSV()),
@@ -17,7 +21,7 @@ TableSnjkmzsRank.prototype.constructor = TableSnjkmzsRank;
 TableSnjkmzsRank.prototype.parse = async function() {
     this.groups = [];
 
-    this.display = `IIDX DP ☆${this.options.level.value} Normal Clear`;
+    this.display = `IIDX DP Lv.${this.options.level.value} Normal Clear`;
 
     const url = 'https://zasa.sakura.ne.jp/dp/rank.php';
 

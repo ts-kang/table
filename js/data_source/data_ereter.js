@@ -1,7 +1,7 @@
 import * as util from '../util.js';
 import { DataSource } from './data_base.js';
 
-const TYPE = { IIDX: 0, INSANE: 1, OVERJOY: 2 };
+export const TYPE = { IIDX: 0, INSANE: 1, OVERJOY: 2 };
 
 export function DataEreter(type, tableOptions) {
     DataSource.call(this);
