@@ -30,7 +30,7 @@ DataLR2.prototype.apply = async function(table) {
     await util.loadLibrary('sqljs-wasm/sql-wasm.js');
 
     const SQL = await initSqlJs({
-        locateFile: file => `../js/lib/sqljs-wasm/${file}`,
+        locateFile: file => `js/lib/sqljs-wasm/${file}`,
     });
 
     const db = await new Promise((resolve, _) => {

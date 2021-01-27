@@ -14,6 +14,7 @@ var TABLES = {
     iidx_ereter_analytics: async () => await import('./table/table_ereter.js').then(m => new m.TableEreterIIDX()),
     iidx_snjkmzs_rank: async () => await import('./table/table_snjkmzs.js').then(m => new m.TableSnjkmzsRank()),
     bms_ereter_insane_analytics: async () => await import('./table/table_ereter.js').then(m => new m.TableEreterBMSInsane()),
+    bms_dp_overjoy: async () => await import('./table/table_dp_overjoy.js').then(m => new m.TableDPOverjoy()),
     bms_custom: async () => await import('./table/table_bms_json.js').then(m => new m.TableBMSJson()),
 };
 
