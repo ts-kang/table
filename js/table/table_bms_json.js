@@ -59,7 +59,9 @@ TableBMSJson.prototype.parse = async function() {
         const bmstable = html.querySelector('meta[name=bmstable]');
         if (!bmstable)
             throw new Error('invalid url');
-        headerUrl = bmstable.content;
+        headerUrl = bmstable.content.match(/^https?:\/\//)
+            ? bmstable.content
+            : (url.replace(/\/[^\/]*$/, '/') + bmstable.content);
         tableHeader = await util.readPage(headerUrl).then(res => res.json());
     } else if (contentType.includes('application/json')) {
         tableHeader = await res.json();
@@ -72,7 +74,7 @@ TableBMSJson.prototype.parse = async function() {
 
     const songs = await util.readPage(tableHeader.data_url.match(/^https?:\/\//)
                                       ? tableHeader.data_url
-                                      : (headerUrl.replace(/\/[^\/]*$/, '') + tableHeader.data_url))
+                                      : (headerUrl.replace(/\/[^\/]*$/, '/') + tableHeader.data_url))
           .then(res => res.json());
 
     songs.forEach(song => {

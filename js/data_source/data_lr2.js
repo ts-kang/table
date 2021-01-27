@@ -47,7 +47,7 @@ DataLR2.prototype.apply = async function(table) {
     const stmt = db.prepare('select * from score where hash=:hash');
 
     table.groups.forEach(group => group.songs.forEach(song => {
-        const record = stmt.getAsObject({':hash': song.md5});
+        const record = stmt.getAsObject({':hash': song.md5.toLowerCase()});
         if (!record.clear)
             return;
         song.playerData = {
