@@ -54,7 +54,7 @@ TableBMSJson.prototype.parse = async function() {
         const html = new DOMParser().parseFromString(await res.text(), 'text/html');
         const bmstable = html.querySelector('meta[name=bmstable]');
         if (!bmstable)
-            throw new Erorr('invalid url');
+            throw new Error('invalid url');
         tableHeader = await util.readPage(bmstable.content).then(res => res.json());
     } else if (contentType.includes('application/json')) {
         tableHeader = await res.json();
