@@ -44,7 +44,7 @@ DataEreter.prototype.parse = async function() {
         `http://ereter.net/bmsplayerdata/${this.player.userId}/dpoverjoy/songs/perlevel/`,
     ][this.type];
 
-    const html = new DOMParser().parseFromString(await util.readPage(url), 'text/html');
+    const html = new DOMParser().parseFromString(await util.readPage(url).then(res => res.text()), 'text/html');
     this.player.username = html.querySelector('.content > h3').innerText;
     const dataTable = Array.from(html.querySelectorAll('[data-sort^=table]')).pop();
     dataTable.querySelectorAll('tbody:not(.tablesorter-no-sort)').forEach(tbody => {

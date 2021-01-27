@@ -13,6 +13,20 @@ export function TableSnjkmzsRank() {
         display: 'CSV',
         instance: async () => await import('../data_source/data_csv.js').then(m => new m.DataCSV()),
     };
+    this.options.level = {
+        display: 'Level',
+        value: 12,
+        render() {
+            let select = document.createElement('select');
+            select.innerHTML = [...Array(12).keys()]
+                .reverse()
+                .map(i => `<option value="${i + 1}">☆${i + 1}</option>`)
+                .join('');
+            select.querySelector(`[value="${this.value}"]`).selected = true;
+            select.addEventListener('change', () => this.value = select.value);
+            return select;
+        },
+    };
 }
 
 TableSnjkmzsRank.prototype = Object.create(DiffTable.prototype);
@@ -31,7 +45,7 @@ TableSnjkmzsRank.prototype.parse = async function() {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: `env=a280&submit=%E8%A1%A8%E7%A4%BA&cat=0&mode=p1&offi=${this.options.level.value}`,
-    }), 'text/html');
+    }).then(res => res.text()), 'text/html');
     const tableRank = Array.from(html.querySelectorAll('table.rank_p1')).pop();
 
     tableRank.querySelectorAll('tr.tile_1, tr.tile_2').forEach(tr => {

@@ -9,7 +9,7 @@ export async function readPage(url, data={}) {
     if (!response.ok)
         return Promise.reject('error: ' + response.status + ' - ' + response.statusText);
 
-    return await response.text();
+    return response;
 }
 
 export async function loadLibrary(relpath) {

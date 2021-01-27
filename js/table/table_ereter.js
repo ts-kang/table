@@ -39,7 +39,7 @@ TableEreter.prototype.parse = async function() {
           : (this.data.options.userId
              ? `http://ereter.net/bmsplayerdata/${this.data.options.userId.value}/dpbms/analytics/perlevel/`
              : `http://ereter.net/bmssongs/dpbms/analytics/perlevel/`);
-    const html = new DOMParser().parseFromString(await util.readPage(url), 'text/html');
+    const html = new DOMParser().parseFromString(await util.readPage(url).then(res => res.text()), 'text/html');
 
     if (this.data.options.userId) {
         const user = html.querySelector('.content > h3');
@@ -111,11 +111,16 @@ export function TableEreterIIDX() {
         display: 'CSV',
         instance: async () => await import('../data_source/data_csv.js').then(m => new m.DataCSV()),
     };
-    let _super_render = this.options.level.render;
-    this.options.level.render = () => {
-        let select = _super_render.call(this.options.level);
-        select.innerHTML = `<option value="12">☆12</option>`;
-        return select;
+    this.options.level = {
+        display: 'Level',
+        value: 12,
+        render() {
+            let select = document.createElement('select');
+            select.innerHTML = `<option value="12">☆12</option>`;
+            select.querySelector(`[value="${this.value}"]`).selected = true;
+            select.addEventListener('change', () => this.value = select.value);
+            return select;
+        },
     };
 }
 
@@ -125,7 +130,6 @@ TableEreterIIDX.prototype.constructor = TableEreterIIDX;
 export function TableEreterBMSInsane() {
     TableEreter.call(this, TYPE.BMS);
     this.display = 'DP Insane BMS';
-    delete this.options.level;
 }
 
 TableEreterBMSInsane.prototype = Object.create(TableEreter.prototype);

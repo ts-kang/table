@@ -53,22 +53,7 @@ export function DiffTable() {
         },
     };
     this.data = undefined;
-    this.options = {
-        level: {
-            display: 'Level',
-            value: 12,
-            render() {
-                let select = document.createElement('select');
-                select.innerHTML = [...Array(12).keys()]
-                    .reverse()
-                    .map(i => `<option value="${i + 1}">☆${i + 1}</option>`)
-                    .join('');
-                select.querySelector(`[value="${this.value}"]`).selected = true;
-                select.addEventListener('change', () => this.value = select.value);
-                return select;
-            },
-        },
-    };
+    this.options = {};
 }
 
 DiffTable.prototype = {

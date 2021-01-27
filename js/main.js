@@ -14,10 +14,29 @@ var TABLES = {
     iidx_ereter_analytics: async () => await import('./table/table_ereter.js').then(m => new m.TableEreterIIDX()),
     iidx_snjkmzs_rank: async () => await import('./table/table_snjkmzs.js').then(m => new m.TableSnjkmzsRank()),
     bms_ereter_insane_analytics: async () => await import('./table/table_ereter.js').then(m => new m.TableEreterBMSInsane()),
-    bms_custom: async () => await import('./table/table_base.js').then(m => new m.DiffTable()),
+    bms_custom: async () => await import('./table/table_bms_json.js').then(m => new m.TableBMSJson()),
 };
 
+['log', 'info', 'warn', 'error'].forEach(f => {
+    let old = console[f];
+    console[f] = (...data) => {
+        old(...data);
+        let pre = document.createElement('pre');
+        pre.className = f;
+        pre.innerText = data.join(' ');
+        DOM.body.appendChild(pre);
+    };
+});
+
 window.onload = async () => {
+    window.onerror = (msg, url, line, col) => {
+        console.error(`
+${msg}
+${url}:${line}${col ? (':' + col) : ''}
+`.trim());
+        return false;
+    };
+
     DOM.selectTable.addEventListener('change', onSelectTable);
     onSelectTable();
 
@@ -41,7 +60,6 @@ async function buildTable(e) {
     const table = TABLES[DOM.selectTable.value];
     //table.player.userId = DOM.inputId.value.replace(/[\D]/g, '');
     await table.parse();
-    console.log(table.groups);
     await table.renderTable(DOM.content);
 
     /*

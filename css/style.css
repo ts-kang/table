@@ -33,7 +33,7 @@ a.ext:after {
     content: '\f08e';
 }
 
-input[type=text] {
+input[type=text], input[type=url] {
     display: block;
     width: 100%;
     padding: .375rem .75rem;
@@ -48,7 +48,7 @@ input[type=text] {
     transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
 }
 
-input[type=text]:focus {
+input[type=text]:focus input[type=url]:focus {
     color: #495057;
     background-color: #fff;
     border-color: #71cced;
@@ -102,6 +102,18 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
 
 h3 {
     font-size: 1.75rem;
+}
+
+pre {
+    font-family: 'Consolas';
+}
+
+pre.warn {
+    color: #eeee88;
+}
+
+pre.error {
+    color: #ff8888;
 }
 
 #content {
