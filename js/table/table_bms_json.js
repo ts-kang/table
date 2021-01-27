@@ -1,9 +1,10 @@
 import { DiffTable } from './table_base.js';
 import * as util from '../util.js';
 
-export function TableBMSJson(url) {
+export function TableBMSJson(url, displayName) {
     DiffTable.call(this);
     this.url = url;
+    this.display = displayName;
     this.dataSources.lr2 = {
         display: 'LR2 Player Data',
         instance: async () => await import('../data_source/data_lr2.js').then(m => new m.DataLR2()),
@@ -69,7 +70,8 @@ TableBMSJson.prototype.parse = async function() {
         throw new Error('invalid url');
     }
 
-    this.display = tableHeader.name;
+    if (!this.display)
+        this.display = tableHeader.name;
     this.prefix = tableHeader.symbol;
 
     const songs = await util.readPage(tableHeader.data_url.match(/^https?:\/\//)
@@ -87,6 +89,11 @@ TableBMSJson.prototype.parse = async function() {
             this.groups.push(group);
         }
         group.songs.push(song);
+    });
+
+    this.groups.sort((a, b) => {
+        const [_a, _b] = [a, b].map(group => group.name >= 0 && group.name < 99 ? group.name : -1);
+        return _b - _a;
     });
 
     this.cite = `from ${url}`;
