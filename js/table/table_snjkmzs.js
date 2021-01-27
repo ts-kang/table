@@ -1,5 +1,5 @@
 import { DiffTable } from './table_base.js';
-import * as util from '../util.js'
+import * as util from '../util.js';
 
 export function TableSnjkmzsRank() {
     DiffTable.call(this);
@@ -28,7 +28,7 @@ TableSnjkmzsRank.prototype.parse = async function() {
     const html = new DOMParser().parseFromString(await util.readPage(url, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
+            'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: `env=a280&submit=%E8%A1%A8%E7%A4%BA&cat=0&mode=p1&offi=${this.options.level.value}`,
     }), 'text/html');
@@ -38,7 +38,31 @@ TableSnjkmzsRank.prototype.parse = async function() {
         const rank = tr.querySelector('td.rank').innerText;
         const songs = Array.from(tr.querySelectorAll('a.music')).map((song, i) => {
             const ret = {
-                title: song.innerText.replace(/ \[[BNHAL]\]$/, ''),
+                title: song.innerText.replace(/ \[[BNHAL]\]$/, '')
+                    .replace(/ \(BIS\)$/, '')
+                    .replace(/ \(HERO\)$/, '')
+                    .replace(/ \(ROOT\)$/, '')
+                    .replace(/ \(CB\)$/, '')
+                    .replace(/ \(SINO\)$/, '')
+                    .replace(/ \(COP\)$/, '')
+                    .replace(/ \(PEN\)$/, '')
+                    .replace(/ \(SPA\)$/, '')
+                    .replace(/ \(TRI\)$/, '')
+                    .replace(/ \(LC\)$/, '')
+                    .replace(/ \(RA\)$/, '')
+                    .replace(/ \(SIR\)$/, '')
+                    .replace(/ \(EMP\)$/, '')
+                    .replace(/ \(DJT\)$/, '')
+                    .replace(/ \(GOLD\)$/, '')
+                    .replace(/ \(DD\)$/, '')
+                    .replace(/ \(HSKY\)$/, '')
+                    .replace(/ \(RED\)$/, '')
+                    .replace(/ \(10th\)$/, '')
+                    .replace(/ \([4-9]th\)$/, '')
+                    .replace(/ \(3rd\)$/, '')
+                    .replace(/ \(2nd\)$/, '')
+                    .replace(/ \(sub\)$/, '')
+                    .replace(/ \(1st\)$/, ''),
                 difficulty: song.innerText.match(/ \[([BNHAL])\]$/)[1]
                     .replace('B', 'BEGINNER')
                     .replace('N', 'NORMAL')
@@ -48,6 +72,7 @@ TableSnjkmzsRank.prototype.parse = async function() {
                 officialLevel: this.options.level.value,
                 snjkmzsID: song.href.match(/music.php\?id=([\d-]+)/)[1],
             };
+
             return ret;
         });
         this.groups.push({

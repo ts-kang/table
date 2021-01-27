@@ -17,7 +17,7 @@ DataSource.prototype = {
     recordKey(song) {},
     async parse() {},
 
-    apply(table) {
+    async apply(table) {
         table.groups.forEach(group => group.songs.forEach(song => {
             const data = this.records.get(this.recordKey(song));
             if (data)

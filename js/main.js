@@ -23,6 +23,8 @@ window.onload = async () => {
 
     DOM.formOptions.addEventListener('submit', buildTable);
     DOM.screenshot.addEventListener('click', takeScreenshot);
+
+    await util.loadLibrary('latinize.js');
 };
 
 async function onSelectTable() {

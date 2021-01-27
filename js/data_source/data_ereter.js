@@ -11,12 +11,13 @@ export function DataEreter(type, tableOptions) {
         input: undefined,
         get value() {
             if (this.input)
-                return this.input.value;
+                return this.input.value.replace(/[\D]/g, '');
             return '';
         },
         render: () => {
             let input = document.createElement('input');
             input.type = 'text';
+            input.name = this.type === TYPE.IIDX ? 'iidx_id' : 'lr2_id';
             input.style.width = '8rem';
             input.placeholder = this.type === TYPE.IIDX ? 'IIDX ID' : 'LR2 ID';
             this.options.userId.input = input;
@@ -30,7 +31,7 @@ DataEreter.prototype.constructor = DataEreter;
 
 DataEreter.prototype.recordKey = function(song) {
     if (this.type === TYPE.IIDX)
-        return song.title + '\t' + song.difficulty;
+        return util.normalize(song.title) + '\t' + song.difficulty;
     return song.title;
 };
 
@@ -50,7 +51,7 @@ DataEreter.prototype.parse = async function() {
         tbody.querySelectorAll('tr').forEach(row => {
             let fields = row.querySelectorAll('td');
             const key = this.type === TYPE.IIDX
-                  ? (fields[1].innerText.replace(/ \([A-Z]+\)$/, '') + '\t' + fields[1].innerText.match(/ \(([A-Z]+)\)$/)[1])
+                  ? (util.normalize(fields[1].innerText.replace(/ \([A-Z]+\)$/, '')) + '\t' + fields[1].innerText.match(/ \(([A-Z]+)\)$/)[1])
                   : fields[1].innerText;
             const offset = this.type === TYPE.IIDX ? 0 : 1;
             let ret = {

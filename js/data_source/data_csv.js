@@ -23,6 +23,7 @@ export function DataCSV() {
         render() {
             let input = document.createElement('input');
             input.type = 'text';
+            input.name = 'username';
             input.style.width = '8rem';
             input.placeholder = 'Username';
             this.input = input;
@@ -34,7 +35,7 @@ export function DataCSV() {
 DataCSV.prototype = Object.create(DataSource.prototype);
 DataCSV.prototype.constructor = DataCSV;
 
-DataCSV.prototype.recordKey = song => song.title + '\t' + song.difficulty;
+DataCSV.prototype.recordKey = song => util.normalize(song.title) + '\t' + song.difficulty;
 
 DataCSV.prototype.parse = async function() {
     await util.loadLibrary('papaparse.min.js');
@@ -59,7 +60,7 @@ DataCSV.prototype.parse = async function() {
 
                 // ('title\tdifficulty', {lamp, rank, score})
                 if (lamp != 'NO-PLAY' || rank)
-                    this.records.set(title + '\t' + diff, {lamp: lamp, rank: rank, score: score});
+                    this.records.set(this.recordKey({title: title, difficulty: diff}), {lamp: lamp, rank: rank, score: score});
             });
         },
         complete: () => resolve(),

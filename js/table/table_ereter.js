@@ -19,7 +19,9 @@ function TableEreter(type) {
     this.fields.ereterColor = {
         display: 'Difficulty Color',
         visible: true,
-        updateDisplay(song) { song.domObj.style.backgroundColor = this.visible ? `rgba(${song.ereterColor[0].join(', ')}, 0.3)` : '' },
+        updateDisplay(group) {
+            group.songs.forEach(song => song.domObj.style.backgroundColor = this.visible ? `rgba(${song.ereterColor[0].join(', ')}, 0.3)` : '');
+        },
     };
     this.sortBy = ['+title', '-ereterEst', '-lamp'];
 }
@@ -85,7 +87,7 @@ TableEreter.prototype.parse = async function() {
     this.groups.reverse();
 
     await this.data.parse();
-    this.data.apply(this);
+    await this.data.apply(this);
 };
 
 TableEreter.prototype.renderTable = async function(container) {

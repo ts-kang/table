@@ -11,25 +11,34 @@ export function DiffTable() {
         title: {
             display: 'Title',
             visible: true,
-            updateDisplay(song) { song.domObj.querySelector('.title').style.display = this.visible ? '' : 'none' },
+            updateDisplay(group) {
+                group.songs.forEach(song => song.domObj.querySelector('.title').style.display = this.visible ? '' : 'none');
+            },
             compare: (a, b) => a.title.localeCompare(b.title),
         },
         lamp: {
             display: 'Clear Lamp',
             visible: true,
-            updateDisplay(song) { song.domObj.querySelector('.lamp').style.display = this.visible ? '' : 'none' },
+            updateDisplay(group) {
+                group.songs[0].domObj.parentElement.parentElement.querySelector('.label > .right > .lamp').style.display = this.visible ? '' : 'none';
+                group.songs.forEach(song => song.domObj.querySelector('.lamp').style.display = this.visible ? '' : 'none');
+            },
             compare: (a, b) => LAMPS.indexOf(a.playerData.lamp) - LAMPS.indexOf(b.playerData.lamp),
         },
         rank: {
             display: 'Rank',
             visible: false,
-            updateDisplay(song) { song.domObj.querySelectorAll('.rank')[0].style.display = this.visible ? '' : 'none' },
+            updateDisplay(group) {
+                group.songs.forEach(song => song.domObj.querySelectorAll('.rank')[0].style.display = this.visible ? '' : 'none');
+            },
             compare: (a, b) => RANKS.indexOf(a.playerData.rank) - RANKS.indexOf(b.playerData.rank),
         },
         percentage: {
             display: 'Percentage',
             visible: false,
-            updateDisplay(song) { song.domObj.querySelectorAll('.rank')[1].style.display = this.visible ? '' : 'none' },
+            updateDisplay(group) {
+                group.songs.forEach(song => song.domObj.querySelectorAll('.rank')[1].style.display = this.visible ? '' : 'none');
+            },
             compare: (a, b) => a.playerData.percentage - b.playerData.percentage,
         },
     };
@@ -75,19 +84,38 @@ DiffTable.prototype = {
 
     async parse() {},
 
-    updateDisplay() {
-        this.groups.forEach(group => group.songs.forEach(song => {
+    updateDisplay(field) {
+        if (field.visible === undefined || !field.updateDisplay)
+            return;
+
+        this.groups.forEach(group => {
+            field.updateDisplay(song);
+            group.songs.forEach(song => {
+                const title = song.domObj.querySelector('.title');
+                const divWidth = song.domObj.offsetWidth - (song.domObj.querySelector('.right').offsetWidth || 0) - 9;
+                if (title.offsetWidth > divWidth) {
+                    let widthScale = Math.max(divWidth / title.offsetWidth, 0.6);
+                    title.style.transform = `scaleX(${widthScale})`;
+                }
+            });
+        });
+    },
+
+    updateDisplayAll() {
+        this.groups.forEach(group => {
             Object.values(this.fields).forEach(field => {
                 if (field.visible !== undefined && field.updateDisplay)
-                    field.updateDisplay(song);
+                    field.updateDisplay(group);
             });
-            const title = song.domObj.querySelector('.title');
-            const divWidth = song.domObj.offsetWidth - (song.domObj.querySelector('.right').offsetWidth || 0) - 9;
-            if (title.offsetWidth > divWidth) {
-                let widthScale = Math.max(divWidth / title.offsetWidth, 0.6);
-                title.style.transform = `scaleX(${widthScale})`;
-            }
-        }));
+            group.songs.forEach(song => {
+                const title = song.domObj.querySelector('.title');
+                const divWidth = song.domObj.offsetWidth - (song.domObj.querySelector('.right').offsetWidth || 0) - 9;
+                if (title.offsetWidth > divWidth) {
+                    let widthScale = Math.max(divWidth / title.offsetWidth, 0.6);
+                    title.style.transform = `scaleX(${widthScale})`;
+                }
+            });
+        });
     },
 
     _renderFields(container) {
@@ -151,7 +179,7 @@ DiffTable.prototype = {
 
         this.groups.forEach(group => {
             let songs = [];
-            let levelLamp = 'NO-PLAY';
+            let levelLamp = LAMPS[LAMPS.length - 1];
             let avgPercentage = 0;
             let dataCount = 0;
             group.songs.forEach(song => {
@@ -178,6 +206,8 @@ DiffTable.prototype = {
                 avgPercentage += song.playerData.percentage;
             });
             avgPercentage /= dataCount;
+            if (dataCount < 1)
+                levelLamp = LAMPS[0];
             const avgRank = RANKS[Math.trunc(avgPercentage / 100 * 9)];
 
             const divGroup = document.createElement('div');
@@ -188,7 +218,7 @@ DiffTable.prototype = {
     ${this.prefix}${group.name}
   </span>
   <span class="right">
-    <span class="lamp ${levelLamp}"></span>
+    <span class="lamp ${levelLamp.toLowerCase()}"></span>
   </span>
 </div>
 <div class="songs"></div>
@@ -197,24 +227,26 @@ DiffTable.prototype = {
             container.appendChild(divGroup);
         });
 
+        let bottom = document.createElement('div');
+        bottom.style.display = 'flex';
+        bottom.style.justifyContent = 'space-between';
+
         if (this.cite) {
             let cite = document.createElement('div');
             cite.className = 'cite';
             cite.innerHTML = this.cite;
-            container.appendChild(cite);
+            bottom.appendChild(cite);
         }
 
         let info = document.createElement('div');
         info.className = 'cite';
-        info.style.float = 'right';
+        info.style.textAlign = 'right';
         info.innerHTML = `generated from <span style="color: #999bcc">nyan.ch/table/</span> on ${new Date().toISOString().replace(/^([\d-]+)[\w][\d:.]+[\w]$/, '$1')}`;
-        container.appendChild(info);
+        bottom.appendChild(info);
 
-        let clear = document.createElement('div');
-        clear.style.clear = 'both';
-        container.appendChild(clear);
+        container.appendChild(bottom);
 
-        this.updateDisplay();
+        this.updateDisplayAll();
         this.sort();
     },
 };
