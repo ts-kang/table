@@ -1,5 +1,6 @@
 import * as util from '../util.js';
 import { DataSource } from './data_base.js';
+import { DataCSV } from './data_csv.js';
 
 export const TYPE = { IIDX: 0, INSANE: 1, OVERJOY: 2 };
 
@@ -70,4 +71,10 @@ DataEreter.prototype.parse = async function() {
             this.records.set(key, ret);
         });
     });
+}
+
+DataEreter.prototype.apply = async function(table) {
+    if (table.constructor.name.toLowerCase().includes('snjkmzs'))
+        return await DataCSV.prototype.apply.call(this, table);
+    return await DataSource.prototype.apply.call(this, table);
 }

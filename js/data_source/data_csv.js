@@ -69,3 +69,25 @@ DataCSV.prototype.parse = async function() {
 
     this.player.username = this.options.username.value;
 };
+
+DataCSV.prototype.apply = async function(table) {
+    table.groups.forEach(group => group.songs.forEach(song => {
+        const key = this.recordKey(song)
+        const data = this.records.get(key);
+        if (data) {
+            song.playerData = data;
+        } else {
+            const [similarKey, distance] = Array.from(this.records.keys())
+                  .reduce((t, k) => {
+                      const d = util.lev(k, key);
+                      if (d < t[1])
+                          return [k, d];
+                      return t;
+                  }, [-1, 1000]);
+            if (distance < parseInt(0.3 * key.length))
+                song.playerData = this.records.get(similarKey);
+            else
+                song.playerData = {lamp: 'NO-PLAY', rank: '', percentage: 0};
+        }
+    }));
+}

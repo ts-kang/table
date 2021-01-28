@@ -4,7 +4,6 @@ const LAMPS = ['NO-PLAY', 'FAILED', 'ASSIST', 'EASY', 'CLEAR', 'HARD', 'EX-HARD'
 const RANKS = ['F', 'F', 'E', 'D', 'C', 'B', 'A', 'AA', 'AAA'];
 
 export function DiffTable() {
-    this.name = undefined;
     this.display = undefined;
     this.cite = undefined;
     this.fields = {

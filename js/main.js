@@ -7,6 +7,7 @@ const DOM = {
     selectTable: document.getElementById('select_table'),
     options: document.getElementById('options'),
     content: document.getElementById('content'),
+    logs: document.getElementById('logs'),
     screenshot: document.getElementById('screenshot'),
 };
 
@@ -29,10 +30,7 @@ var TABLES = {
         let pre = document.createElement('pre');
         pre.className = f;
         pre.innerText = data.join(' ');
-        if (DOM.content.querySelectorAll(':not(pre)').length > 0)
-            DOM.body.appendChild(pre);
-        else
-            DOM.content.appendChild(pre);
+        DOM.logs.appendChild(pre);
     };
 });
 
@@ -40,10 +38,7 @@ const onerror = e => {
     let pre = document.createElement('pre');
     pre.className = 'error';
     pre.innerText = (e.error || e.reason);
-    if (DOM.content.querySelectorAll(':not(pre)').length > 0)
-        DOM.body.appendChild(pre);
-    else
-        DOM.content.appendChild(pre);
+    DOM.logs.appendChild(pre);
 };
 
 window.addEventListener('error', onerror);
@@ -72,6 +67,7 @@ async function buildTable(e) {
     e.preventDefault();
 
     DOM.content.innerHTML = '';
+    DOM.logs.innerHTML = '';
 
     const table = TABLES[DOM.selectTable.value];
     //table.player.userId = DOM.inputId.value.replace(/[\D]/g, '');
@@ -79,7 +75,7 @@ async function buildTable(e) {
     await table.parse();
     console.log('render table');
     await table.renderTable(DOM.content);
-    DOM.content.querySelectorAll('pre').forEach(pre => pre.remove());
+    DOM.logs.innerHTML = '';
 }
 
 async function takeScreenshot() {

@@ -6,7 +6,7 @@ export function TableBMSJson(url, displayName) {
     this.url = url;
     this.display = displayName;
     this.dataSources.lr2 = {
-        display: 'LR2 Player Data',
+        display: 'LR2 Player Database',
         instance: async () => await import('../data_source/data_lr2.js').then(m => new m.DataLR2()),
     };
     if (!this.url) {
@@ -92,7 +92,7 @@ TableBMSJson.prototype.parse = async function() {
         return _b - _a;
     });
 
-    this.cite = `from ${url}`;
+    this.cite = `from <a href="${url}" style="color: inherit">${url}</a>`;
 
     await this.data.parse();
     await this.data.apply(this);

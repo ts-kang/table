@@ -105,8 +105,11 @@ h3 {
 }
 
 pre {
-    font-family: 'Consolas';
-    color: #dddfe4;
+    margin: 0;
+    font-family: Consolas,Menlo,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New,monospace,sans-serif;
+    font-size: .8rem;
+    line-height: 1.4;
+    color: #bbbbbb;
 }
 
 pre.warn {
