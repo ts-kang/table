@@ -29,10 +29,12 @@ DataLR2.prototype.parse = async function() {
 DataLR2.prototype.apply = async function(table) {
     await util.loadLibrary('sqljs-wasm/sql-wasm.js');
 
+    console.log('initialize sqljs');
     const SQL = await initSqlJs({
         locateFile: file => `js/lib/sqljs-wasm/${file}`,
     });
 
+    console.log('read database');
     const db = await new Promise((resolve, _) => {
         const reader = new FileReader();
         reader.onload = () => resolve(new SQL.Database(new Uint8Array(reader.result)));

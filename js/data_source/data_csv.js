@@ -40,6 +40,7 @@ DataCSV.prototype.recordKey = song => util.normalize(song.title) + '\t' + song.d
 DataCSV.prototype.parse = async function() {
     await util.loadLibrary('papaparse.min.js');
 
+    console.log('parse csv')
     await new Promise((resolve, _) => Papa.parse(this.options.csvFile.value, {
         header: true,
         step: row => {

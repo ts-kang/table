@@ -36,6 +36,8 @@ DataEreter.prototype.recordKey = function(song) {
 };
 
 DataEreter.prototype.parse = async function() {
+    console.log('parse player data');
+
     this.player.userId = this.options.userId.value;
     const level = this.tableOptions.level;
     const url = [

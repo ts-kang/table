@@ -60,9 +60,7 @@ TableBMSJson.prototype.parse = async function() {
         const bmstable = html.querySelector('meta[name=bmstable]');
         if (!bmstable)
             throw new Error('invalid url');
-        headerUrl = bmstable.content.match(/^https?:\/\//)
-            ? bmstable.content
-            : (url.replace(/\/[^\/]*$/, '/') + bmstable.content);
+        headerUrl = new URL(bmstable.content, url).toString();
         tableHeader = await util.readPage(headerUrl).then(res => res.json());
     } else if (contentType.includes('application/json')) {
         tableHeader = await res.json();
@@ -74,13 +72,11 @@ TableBMSJson.prototype.parse = async function() {
         this.display = tableHeader.name;
     this.prefix = tableHeader.symbol;
 
-    const songs = await util.readPage(tableHeader.data_url.match(/^https?:\/\//)
-                                      ? tableHeader.data_url
-                                      : (headerUrl.replace(/\/[^\/]*$/, '/') + tableHeader.data_url))
+    const songs = await util.readPage(new URL(tableHeader.data_url, headerUrl).toString())
           .then(res => res.json());
 
     songs.forEach(song => {
-        let group = this.groups.filter(group => group.name === song.level).pop();
+        let group = this.groups.filter(group => group.name === song.level).shift();
         if (!group) {
             group = {
                 name: song.level,
@@ -101,3 +97,15 @@ TableBMSJson.prototype.parse = async function() {
     await this.data.parse();
     await this.data.apply(this);
 };
+
+TableBMSJson.prototype.renderTable = async function(container) {
+    await DiffTable.prototype.renderTable.call(this, container);
+
+    const h3 = Array.from(container.querySelectorAll('h3')).pop();
+    if (h3 && this.data.player.userId) {
+        let divId = document.createElement('div');
+        divId.style = 'margin-top: 1rem; margin-bottom: -.8rem; font-weight: 300; font-size: 1rem; color: #999baa;';
+        divId.innerText = this.data.player.userId;
+        h3.after(divId);
+    }
+}

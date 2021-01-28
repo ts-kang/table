@@ -5,9 +5,10 @@ export function format(str, ...args) {
 }
 
 export async function readPage(url, data={}) {
+    console.log('fetching... ' + url);
     const response = await fetch('https://cors-header-proxy.nnyan.workers.dev/?' + url, data);
     if (!response.ok)
-        return Promise.reject('error: ' + response.status + ' - ' + response.statusText);
+        throw new Error('failed. status: ' + response.status);
 
     return response;
 }

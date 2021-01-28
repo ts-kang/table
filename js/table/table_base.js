@@ -139,7 +139,6 @@ DiffTable.prototype = {
     },
 
     async renderOptions(container) {
-        container.innerHTML = '';
         Object.values(this.options).forEach(option => {
             let div = document.createElement('div');
             div.className = 'option';
@@ -154,8 +153,6 @@ DiffTable.prototype = {
     },
 
     async renderTable(container) {
-        container.innerHTML = '';
-
         if (this.display !== undefined)
             container.innerHTML += `<h3 style="font-size: 2.5rem; text-align: center; color: #ccccfd6; margin: 0; margin-bottom: 1rem;">${this.display}</h3>`;
 
@@ -213,8 +210,7 @@ DiffTable.prototype = {
         });
 
         let bottom = document.createElement('div');
-        bottom.style.display = 'flex';
-        bottom.style.justifyContent = 'space-between';
+        bottom.style = 'display: flex; justify-content: space-between; margin-bottom: 0;';
 
         if (this.cite) {
             let cite = document.createElement('div');
@@ -225,7 +221,6 @@ DiffTable.prototype = {
 
         let info = document.createElement('div');
         info.className = 'cite';
-        info.style.textAlign = 'right';
         info.innerHTML = `generated from <span style="color: #999bcc">nyan.ch/table/</span> on ${new Date().toISOString().replace(/^([\d-]+)[\w][\d:.]+[\w]$/, '$1')}`;
         bottom.appendChild(info);
 
