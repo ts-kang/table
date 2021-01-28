@@ -35,7 +35,7 @@ export function DataCSV() {
 DataCSV.prototype = Object.create(DataSource.prototype);
 DataCSV.prototype.constructor = DataCSV;
 
-DataCSV.prototype.recordKey = song => util.normalize(song.title) + '\t' + song.difficulty;
+DataCSV.prototype.recordKey = song => util.normalize(song.title) + '\t' + song.difficulty + song.officialLevel;
 
 DataCSV.prototype.parse = async function() {
     await util.loadLibrary('papaparse.min.js');
@@ -58,10 +58,11 @@ DataCSV.prototype.parse = async function() {
                 const rank = row.data[diff + ' DJ LEVEL']
                       .replace('---', '');
                 const score = row.data[diff + ' スコア'];
+                const level = row.data[diff + ' 難易度'];
 
                 // ('title\tdifficulty', {lamp, rank, score})
                 if (lamp != 'NO-PLAY' || rank)
-                    this.records.set(this.recordKey({title: title, difficulty: diff}), {lamp: lamp, rank: rank, score: score});
+                    this.records.set(this.recordKey({title: title, difficulty: diff, officialLevel: level}), {lamp: lamp, rank: rank, score: score});
             });
         },
         complete: () => resolve(),
@@ -72,23 +73,30 @@ DataCSV.prototype.parse = async function() {
 
 DataCSV.prototype.apply = async function(table) {
     table.groups.forEach(group => group.songs.forEach(song => {
-        const key = this.recordKey(song)
+        const key = this.recordKey(song);
         const data = this.records.get(key);
         if (data) {
             song.playerData = data;
+            this.records.delete(key);
         } else {
             const title = key.substring(0, key.lastIndexOf('\t'));
-            const [similarKey, distance] = Array.from(this.records.keys())
+            const difflevel = key.substring(key.lastIndexOf('\t'));
+            const [similarKey, similarTitle, distance] = Array.from(this.records.keys())
                   .reduce((t, k) => {
-                      const d = util.lev(k.substring(0, k.lastIndexOf('\t')), title);
-                      if (d < t[1])
-                          return [k, d];
+                      const kt = k.substring(0, k.lastIndexOf('\t'));
+                      const d = util.lev(kt, title);
+                      if (d < t[2] && k.substring(k.lastIndexOf('\t')) === difflevel)
+                          return [k, kt, d];
                       return t;
-                  }, [-1, 1000]);
-            if (distance < parseInt(0.3 * title.length))
+                  }, ['', '', 1000]);
+            console.log(`lev('${similarTitle}', '${title}') ===`, distance,
+                        ', tolerance:', parseInt(Math.log2(Math.min(similarTitle.length, title.length))));
+            if (distance <= parseInt(Math.log2(Math.min(similarTitle.length, title.length)))) { // lev(ooo, bloom) === 2
                 song.playerData = this.records.get(similarKey);
-            else
+                this.records.delete(similarKey);
+            } else {
                 song.playerData = {lamp: 'NO-PLAY', rank: '', percentage: 0};
+            }
         }
     }));
 }

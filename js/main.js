@@ -37,7 +37,7 @@ var TABLES = {
 const onerror = e => {
     let pre = document.createElement('pre');
     pre.className = 'error';
-    pre.innerText = (e.error || e.reason);
+    pre.innerText = e.error || e.reason;
     DOM.logs.appendChild(pre);
 };
 
