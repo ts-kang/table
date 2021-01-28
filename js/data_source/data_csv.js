@@ -77,14 +77,15 @@ DataCSV.prototype.apply = async function(table) {
         if (data) {
             song.playerData = data;
         } else {
+            const title = key.substring(0, key.lastIndexOf('\t'));
             const [similarKey, distance] = Array.from(this.records.keys())
                   .reduce((t, k) => {
-                      const d = util.lev(k, key);
+                      const d = util.lev(k.substring(0, k.lastIndexOf('\t')), title);
                       if (d < t[1])
                           return [k, d];
                       return t;
                   }, [-1, 1000]);
-            if (distance < parseInt(0.3 * key.length))
+            if (distance < parseInt(0.3 * title.length))
                 song.playerData = this.records.get(similarKey);
             else
                 song.playerData = {lamp: 'NO-PLAY', rank: '', percentage: 0};
