@@ -57,7 +57,6 @@ export function DiffTable() {
 
 DiffTable.prototype = {
     sort() {
-        console.log(this.sortBy);
         this.groups.forEach(group => group.songs.forEach(song => song.domObj.style.order = ''));
 
         const comparators = this.sortBy.map(c => [this.fields[c.substring(1)].compare, parseInt(c.charAt(0) + '1')]);

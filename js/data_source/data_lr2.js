@@ -50,11 +50,19 @@ DataLR2.prototype.apply = async function(table) {
 
     table.groups.forEach(group => group.songs.forEach(song => {
         const record = stmt.getAsObject({':hash': song.md5.toLowerCase()});
-        if (!record.clear)
+        if (record.clear === undefined)
             return;
+        const score = record.perfect * 2 + record.great;
+        const percentage = score / (record.totalnotes * 2.0) * 100.0;
         song.playerData = {
             lamp: LAMPS[record.clear],
+            lamp_db: LAMPS[record.clear_db],
+            lamp_sd: LAMPS[record.clear_sd],
+            lamp_ex: LAMPS[record.clear_ex],
             rank: RANKS[record.rank],
+            bp: record.minbp,
+            score: score,
+            percentage: percentage,
         };
     }));
 };
