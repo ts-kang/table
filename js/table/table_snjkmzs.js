@@ -90,7 +90,8 @@ TableSnjkmzsRank.prototype.parse = async function() {
             return ret;
         });
         this.groups.push({
-            name: rank,
+            level: rank,
+            name: this.prefix + rank,
             songs: songs,
         });
     });
@@ -98,5 +99,5 @@ TableSnjkmzsRank.prototype.parse = async function() {
     this.groups.reverse();
 
     await this.data.parse();
-    this.data.apply(this);
+    await this.data.apply(this);
 }

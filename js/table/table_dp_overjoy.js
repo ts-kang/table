@@ -15,7 +15,7 @@ TableDPOverjoy.prototype.parse = async function() {
     await TableBMSJson.prototype.parse.call(this);
 
     this.groups.forEach(group => {
-        if (parseInt(group.name) === 99)
-            group.name = 'ω';
+        if (parseInt(group.level) === 99)
+            group.level = 'ω';
     });
 };

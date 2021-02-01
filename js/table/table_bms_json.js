@@ -75,11 +75,13 @@ TableBMSJson.prototype.parse = async function() {
     const songs = await util.readPage(new URL(tableHeader.data_url, headerUrl).toString())
           .then(res => res.json());
 
+    const prefix = this.prefix;
     songs.forEach(song => {
-        let group = this.groups.filter(group => group.name === song.level).shift();
+        let group = this.groups.filter(group => group.level === song.level).shift();
         if (!group) {
             group = {
-                name: song.level,
+                level: song.level,
+                get name() { return `${prefix}${this.level}`; },
                 songs: [],
             };
             this.groups.push(group);
@@ -88,7 +90,7 @@ TableBMSJson.prototype.parse = async function() {
     });
 
     this.groups.sort((a, b) => {
-        const [_a, _b] = [a, b].map(group => group.name >= 0 && group.name < 99 ? group.name : -1);
+        const [_a, _b] = [a, b].map(group => group.level >= 0 && group.level < 99 ? group.level : -1);
         return _b - _a;
     });
 

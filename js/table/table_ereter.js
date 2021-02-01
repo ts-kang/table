@@ -79,7 +79,8 @@ TableEreter.prototype.parse = async function() {
         if (!level)
             return;
         this.groups.push({
-            name: level,
+            level: level,
+            name: this.prefix + level,
             songs: songs,
         });
     });

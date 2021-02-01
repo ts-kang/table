@@ -14,6 +14,8 @@ const DOM = {
 var TABLES = {
     iidx_ereter_analytics: async () => await import('./table/table_ereter.js').then(m => new m.TableEreterIIDX()),
     iidx_snjkmzs_rank: async () => await import('./table/table_snjkmzs.js').then(m => new m.TableSnjkmzsRank()),
+    iidx_sp_12_normal: async () => await import('./table/table_sp_12.js').then(m => new m.TableSP12(m.TYPE.NORMAL)),
+    iidx_sp_12_hard: async () => await import('./table/table_sp_12.js').then(m => new m.TableSP12(m.TYPE.HARD)),
     bms_ereter_insane_analytics: async () => await import('./table/table_ereter.js').then(m => new m.TableEreterBMSInsane()),
     bms_dp_overjoy: async () => await import('./table/table_dp_overjoy.js').then(m => new m.TableDPOverjoy()),
     bms_dp_satellite: async () => await import('./table/table_bms_json.js').then(m => new m.TableBMSJson('https://stellabms.xyz/dp/table.html', 'DP Satellite')),

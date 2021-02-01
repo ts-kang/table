@@ -293,7 +293,7 @@ DiffTable.prototype = {
             divGroup.innerHTML = `
 <div class="label">
   <span>
-    ${this.prefix}${group.name}
+    ${group.name}
   </span>
   <span class="right">
     <span class="lamp ${levelLamp.toLowerCase()}"></span>
@@ -303,6 +303,7 @@ DiffTable.prototype = {
 `;
             divGroup.querySelector('.songs').append(...songs);
             container.appendChild(divGroup);
+            group.domObj = divGroup;
         });
 
         let bottom = document.createElement('div');
