@@ -29,17 +29,17 @@ TableSP12.prototype.parse = async function() {
     const jsonArr = await util.readPage(url).then(res => res.json());
 
     jsonArr.forEach(song => {
-        const rankName = song[['normal', 'hard'][this.type]].trim() || 'Unclassified';
-        let group = this.groups.filter(group => group.name === rankName).pop();
+        const rankName = song[['normal', 'hard'][this.type]].trim();
+        const rank = (rankName.match(/[SA-F]\+?$/) || [''])[0];
+        const discrimination = rankName.startsWith('個人差');
+        let group = this.groups.filter(group => group.rank === rank && group.discrimination === discrimination).pop();
         if (!group) {
             group = {
-                name: rankName,
+                name: rankName ? (discrimination ? '個人差' : rank) : 'Unclassified',
+                rank: rank,
+                discrimination: discrimination,
                 songs: [],
             };
-            if (rankName !== 'Unclassified') {
-                group.rank = rankName.match(/[SA-F]\+?$/)[0];
-                group.discrimination = rankName.startsWith('個人差');
-            }
             this.groups.push(group);
         }
         group.songs.push({

@@ -31,8 +31,9 @@ export function normalize(str) {
     return latinize(
         str.trim()
             .replace('§', 'ss')
+            .replace('”', '"')
+            .replace('焱', '火')
             //.replace(/[･〜]/g, '')
-            //.replace('焱', '火')
     )
         .trim()
         .normalize('NFKD')
