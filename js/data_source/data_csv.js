@@ -89,7 +89,7 @@ DataCSV.prototype.apply = async function(table) {
                           return [k, kt, d];
                       return t;
                   }, ['', '', 1000]);
-            console.log(`lev('${similarTitle}', '${title}') ===`, distance,
+            console.debug(`lev('${similarTitle}', '${title}') ===`, distance,
                         ', tolerance:', parseInt(Math.log2(Math.min(similarTitle.length, title.length))));
             if (distance <= parseInt(Math.log2(Math.min(similarTitle.length, title.length)))) { // lev(ooo, bloom) === 2
                 song.playerData = this.records.get(similarKey);

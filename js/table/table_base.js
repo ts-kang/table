@@ -57,11 +57,12 @@ export function DiffTable() {
 
 DiffTable.prototype = {
     sort() {
+        console.log(this.sortBy);
         this.groups.forEach(group => group.songs.forEach(song => song.domObj.style.order = ''));
 
         const comparators = this.sortBy.map(c => [this.fields[c.substring(1)].compare, parseInt(c.charAt(0) + '1')]);
         this.groups.forEach(group => {
-            group.songs.sort((a, b) => comparators.reduce((total, [c, asc]) => asc * c(a, b) || total));
+            group.songs.sort((a, b) => comparators.reduce((total, [c, asc]) => asc * c(a, b) || total, 0));
             group.songs.forEach((song, i) => song.domObj.style.order = i);
         });
     },
@@ -73,7 +74,7 @@ DiffTable.prototype = {
             return;
 
         this.groups.forEach(group => {
-            field.updateDisplay(song);
+            field.updateDisplay(group);
             group.songs.forEach(song => {
                 const title = song.domObj.querySelector('.title');
                 const divWidth = song.domObj.offsetWidth - (song.domObj.querySelector('.right').offsetWidth || 0) - 9;
@@ -103,9 +104,97 @@ DiffTable.prototype = {
     },
 
     _renderFields(container) {
-        Object.entries(this.fields).forEach(([key, field]) => {
-            
-        });
+        let divSort = document.createElement('div');
+        divSort.style.display = 'flex';
+        divSort.style.flexDirection = 'column';
+
+        const addCriterion = (last, criterion='+') => {
+            let divCrit = document.createElement('div');
+            divCrit.style.display = 'flex';
+            const fieldKey = criterion.substring(1);
+            const asc = parseInt(criterion.charAt(0) + '1');
+
+            let select = document.createElement('select');
+            select.innerHTML = Object.entries(this.fields)
+                .filter(([key, field]) => field.compare)
+                .map(([key, field]) => `<option value="${key}">${field.display}</option>`)
+                .join('');
+            let buttonAsc = document.createElement('button');
+            buttonAsc.type = 'button';
+            buttonAsc.className = asc > 0 ? 'icon-sortup' : 'icon-sortdown';
+            let buttonRemove = document.createElement('button');
+            buttonRemove.type = 'button';
+            buttonRemove.className = 'icon-minus';
+            let buttonAdd = document.createElement('button');
+            buttonAdd.type = 'button';
+            buttonAdd.className = 'icon-plus';
+            divCrit.append(select, buttonAsc, buttonRemove, buttonAdd);
+            if (last)
+                last.after(divCrit);
+            else
+                divSort.appendChild(divCrit);
+            if (fieldKey)
+                select.querySelector(`[value="${fieldKey}"]`).selected = true;
+            else
+                this.sortBy.splice(Array.from(divSort.children).indexOf(divCrit), 0,
+                                   criterion.charAt(0) + select.querySelector('option').value);
+            const update = () => {
+                this.sortBy.splice(Array.from(divSort.children).indexOf(divCrit), 1,
+                                   (buttonAsc.className === 'icon-sortup' ? '+' : '-') + select.value);
+                this.sort();
+            };
+            select.addEventListener('change', update);
+            buttonAsc.addEventListener('click', () => {
+                buttonAsc.className = buttonAsc.className === 'icon-sortup' ? 'icon-sortdown' : 'icon-sortup';
+                update();
+            });
+            buttonRemove.addEventListener('click', () => {
+                if (divSort.childElementCount > 1) {
+                    this.sortBy.splice(Array.from(divSort.children).indexOf(divCrit), 1);
+                    divCrit.remove();
+                    this.sort();
+                }
+            });
+            buttonAdd.addEventListener('click', () => {
+                addCriterion(divCrit);
+                this.sort();
+            });
+        };
+
+        this.sortBy.forEach(criterion => addCriterion(null, criterion));
+
+        let div = document.createElement('div');
+        div.className = 'option';
+        div.style.alignItems = 'flex-start';
+        div.innerHTML = '<div style="padding: .375rem 0">Sort</div>';
+        div.appendChild(divSort);
+        container.appendChild(div);
+
+        let divShow = document.createElement('div');
+        divShow.className = 'menu';
+        divShow.innerHTML = '<div class="name">Show</div>';
+        divShow.append(
+            ...Object.values(this.fields)
+                .filter(field => field.updateDisplay && field.visible !== undefined)
+                .map(field => {
+                    let divItem = document.createElement('div');
+                    divItem.className = 'item' + (field.visible ? ' enabled' : '');
+                    divItem.innerText = field.display;
+                    divItem.addEventListener('click', () => {
+                        if (divItem.classList.contains('enabled')) {
+                            divItem.classList.remove('enabled');
+                            field.visible = false;
+                        } else {
+                            divItem.classList.add('enabled');
+                            field.visible = true;
+                        }
+                        this.updateDisplay(field);
+                    });
+                    return divItem;
+                })
+        );
+
+        container.appendChild(divShow);
     },
 
     async _renderDataSource(container) {
@@ -126,12 +215,21 @@ DiffTable.prototype = {
         container.appendChild(dataOptions);
 
         const onchange = async () => {
+            dataSource.style.float = '';
             dataOptions.innerHTML = '';
             let instance = this.dataSources[select.value].instance;
             if(typeof instance === 'function')
                 instance = this.dataSources[select.value].instance = await instance();
             this.data = instance;
             this.data.renderOptions(dataOptions);
+            (dataOptions.lastElementChild || dataSource).style.float = 'left';
+            let div = document.createElement('div');
+            div.innerHTML =  `
+<button type="submit" class="option" style="float: left">
+  <span class="icon-search"></span>
+</button>
+<div style="clear: both"></div>`;
+            dataOptions.appendChild(div);
         }
         select.addEventListener('change', onchange);
         await onchange();
