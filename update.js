@@ -78,13 +78,7 @@
     const INTERVAL = 500;
 
     const util = {
-        log(...data) {
-            console.log(...data);
-        },
-        
         async readPage(url, data={}) {
-            this.log('fetching... ' + url);
-
             await new Promise(resolve => setTimeout(resolve, INTERVAL));
             const response = await fetch(url, data);
             if (!response.ok)
@@ -108,37 +102,43 @@
         // ('title\tdifficulty', level)
         this.levels = [new Map(), new Map()]; // [SP, DP]
         this.csv = [new CSV(HEADER), new CSV(HEADER)]; // [SP, DP]
+        this.stop = true;
     };
     IIDXCSVGenerator.prototype = {
         async parseUserData(style) {
             this.csv = await this._newUserCSV(style);
-            if (this.levels[style].size === 0)
-                await this._parseLevels(style);
+            this.log('DJ NAME:', this.csv.djname);
+            await this._parseLevels(style);
             await this._parseSeries(this.csv);
         },
 
         async parseRivalData(style, iidxid) {
             this.csv = await this._newRivalCSV(style, iidxid);
-            if (this.levels[style].size === 0)
-                await this._parseLevels(style);
+            this.log('DJ NAME:', this.csv.djname);
+            await this._parseLevels(style, this.csv.rivalCode);
             await this._parseSeries(this.csv);
         },
 
         async _parseSeries(csv) {
-            const url = `https://p.eagate.573.jp/game/2dx/${this.version}/djdata/music/series.html`;
+            const url = csv.rivalCode
+                  ? `https://p.eagate.573.jp/game/2dx/${this.version}/djdata/music/series_rival.html`
+                  : `https://p.eagate.573.jp/game/2dx/${this.version}/djdata/music/series.html`;
 
             const html = await util.readDOM(url);
             const versionList = Array.from(html.querySelector('select[name=list]').children)
-                  .map(option => [option.innerText, option.value])
-                  .sort((a, b) => a[1] - b[1]);
+                  .map(option => [option.value, option.innerText])
+                  .sort((a, b) => a[0] - b[0]);
 
-            for (const [versionName, value] of versionList.entries()) {
+            for (const [i, [value, versionName]] of versionList.entries()) {
+                if (this.stop)
+                    throw new Error('stop');
+                this.log(`parse version ${versionName} (${i + 1}/${versionList.length})`);
                 const doc = await util.readDOM(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: `list=${value}&play_style=${csv.style}&s=1&rival=`,
+                    body: `list=${value}&play_style=${csv.style}&s=1&rival=${csv.rivalCode || ''}`,
                 });
 
                 doc
@@ -149,6 +149,7 @@
                             return;
                         const title = td.querySelector('.music_info').innerText;
                         let row = {
+                            'バージョン': versionName,
                             'タイトル': title,
                             'ジャンル': '---', // genre
                             'アーティスト': '---', // artist
@@ -178,22 +179,27 @@
             }
         },
 
-        async _parseLevels(style) {
-            const url = `https://p.eagate.573.jp/game/2dx/${this.version}/djdata/music/difficulty.html`;
+        async _parseLevels(style, rivalCode) {
+            const url = rivalCode
+                  ? `https://p.eagate.573.jp/game/2dx/${this.version}/djdata/music/difficulty_rival.html`
+                  : `https://p.eagate.573.jp/game/2dx/${this.version}/djdata/music/difficulty.html`;
             const html = await util.readDOM(url);
             const levels = Array.from(html.querySelector('select[name=difficult]').children)
                   .map(option => [option.value, parseInt(option.innerText.match(/LEVEL (\d{1,2})/)[1])])
                   .sort((a, b) => a[0] - b[0]);
 
-            for (const [value, level] of levels) {
+            for (const [i, [value, level]] of levels.entries()) {
                 let offset = 0;
+                this.log(`parse level ${level} (${i + 1}/${levels.length})`);
                 while (true) {
+                    if (this.stop)
+                        throw new Error('stop');
                     const doc = await util.readDOM(url, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
                         },
-                        body: `difficult=${value}&style=${style}&disp=1&offset=${offset}`,
+                        body: `difficult=${value}&style=${style}&disp=1&rival=${rivalCode || ''}&offset=${offset}`,
                     });
 
                     let tbody = doc.querySelector('div.series-difficulty > table > tbody');
@@ -244,6 +250,8 @@
                 body: `iidxid=${iidxid}&mode=1`,
             });
             const row = Array.from(html.querySelectorAll('table#result > tbody > tr')).pop();
+            if (!row)
+                throw new Error('could not find user ' + iidxid);
             const fields = row.querySelectorAll('td');
             const djname = fields[0].querySelector('a').innerText;
             // url encoded string
@@ -255,44 +263,141 @@
             return csv;
         },
 
+        log(...data) {
+            console.log(...data);
+            let pre = document.createElement('pre');
+            pre.className = 'csv_pre log';
+            pre.innerText = data.join(' ');
+            let log = document.getElementById('csv_log');
+            log.appendChild(pre);
+            log.scrollTop = log.scrollHeight;
+        },
+
+        error(e) {
+            let pre = document.createElement('pre');
+            pre.className = 'csv_pre error';
+            pre.innerText = e.toString();
+            let log = document.getElementById('csv_log');
+            log.appendChild(pre);
+            log.scrollTop = log.scrollHeight;
+        },
+        
         renderUI() {
             this.domUI = document.createElement('div');
             this.domUI.style = `
 position: fixed;
-right: 10px;
-top: 10px;
+left: 50%;
+top: 50%;
+margin-left: -150px;
+margin-top: -200px;
 z-index: 10000;
-width: 10rem;
-height: 15rem;
+width: 300px;
+height: 400px;
+padding: 5px;
 background-color: #252830;
 `;
             this.domUI.innerHTML = `
 <style>
+.csv_form {
+  all: initial;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+.csv_form * {
+  flex: none;
+  font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  display: block;
+  color: #fff;
+  margin: 5px;
+}
+.csv_textinput {
+  min-height: 30px;
+  border: 1px solid #000;
+  padding: 5px;
+  color: #000;
+}
+.csv_buttons {
+  display: flex;
+  width: 100%;
+  margin: 5px 0;
+}
+.csv_button {
+  flex: auto;
+  margin: 0 5px;
+  width: 100%;
+  height: 30px;
+  color: #fff;
+  background: #434343;
+  background: -moz-linear-gradient(top, #434343 0%, #060606 100%);
+  background: -webkit-linear-gradient(top, #434343 0%,#060606 100%);
+  background: linear-gradient(to bottom, #434343 0%,#060606 100%);
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 10px;
+}
+.csv_log {
+  margin: 0;
+  padding: 5px;
+  flex: auto;
+  width: 100%;
+  overflow: scroll;
+}
+.csv_pre {
+  margin: 0;
+  font-family: Consolas,Menlo,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New,monospace,sans-serif;
+  font-size: .8rem;
+  line-height: 1.4;
+  color: #bbbbbb;
+}
+.csv_pre.warn {
+  color: #eeee88;
+}
+
+.csv_pre.error {
+  color: #ff8888;
+}
 </style>
-<h3 class="title">CSV Generator</h3>
-<input type="text" id="rival_id" name="rival_id" placeholder="Rival ID">
-<div style="display: flex">
-  <button id="parse_sp" type="button" class="submit_btn">SP</button>
-  <button id="parse_dp" type="button" class="submit_btn">DP</button>
+<form class="csv_form">
+<h3>CSV Generator</h3>
+<input type="text" class="csv_textinput" id="csv_rival_id" name="rival_id" placeholder="Rival ID">
+<div class="csv_buttons">
+  <button class="csv_button" id="csv_parse_sp" type="button">SP</button>
+  <button class="csv_button" id="csv_parse_dp" type="button">DP</button>
 </div>
+<div class="csv_buttons">
+<button class="csv_button" id="csv_stop" type="button">STOP</button>
+</div>
+<div id="csv_log" class="csv_log">
+</div>
+</form>
 `;
             document.body.appendChild(this.domUI);
-            const onclick = style => {
-                const rival = document.getElementById('rival_id').value;
-                if (rival)
-                    await this.parseRivalData(style, rival.replace(/[\D]/g, ''));
-                else
-                    await this.parseUserData(style);
-                let a = document.createElement('a');
-                a.href = `data:text/plain;charset=utf-8,${encodeURIComponent(this.csv.toString())}`;
-                a.download = csv.getFilename();
-                a.style = 'position: absolute; left: -10000px; top: -10000px;';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
+            const onclick = async style => {
+                try {
+                    this.stop = false;
+                    const rival = document.getElementById('csv_rival_id').value;
+                    if (rival)
+                        await this.parseRivalData(style, rival.replace(/[\D]/g, ''));
+                    else
+                        await this.parseUserData(style);
+                    let a = document.createElement('a');
+                    a.href = `data:text/plain;charset=utf-8,${encodeURIComponent(this.csv.toString())}`;
+                    a.download = this.csv.getFilename();
+                    a.style = 'position: absolute; left: -10000px; top: -10000px;';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                } catch(e) {
+                    this.error(e);
+                    throw e;
+                }
             };
-            document.getElementById('parse_sp').addEventListener('click', () => onclick(PLAYSTYLE.SP));
-            document.getElementById('parse_dp').addEventListener('click', () => onclick(PLAYSTYLE.DP));
+            document.getElementById('csv_parse_sp').addEventListener('click', async () => await onclick(PLAYSTYLE.SP));
+            document.getElementById('csv_parse_dp').addEventListener('click', async () => await onclick(PLAYSTYLE.DP));
+            document.getElementById('csv_stop').addEventListener('click', async () => this.stop = true);
         },
     };
 
