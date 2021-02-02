@@ -1,10 +1,13 @@
 /**
- * Last update: 2021-02-02
- *
  * Contact: @naynn_n
  */
 
 (() => {
+    if (typeof __csv_generator !== 'undefined')
+        return;
+
+    const LAST_UPDATED = '2021-02-02';
+
     function CSV(header, style, iidxid, djname) {
         this.header = header;
         this.iidxid = iidxid;
@@ -107,17 +110,11 @@
         this.stop = true;
     };
     IIDXCSVGenerator.prototype = {
-        async parseUserData(style) {
-            this.csv = await this._newUserCSV(style);
+        async parseData(style, iidxid) {
+            this.csv = await this.newCSV(style, iidxid);
             this.log('DJ NAME:', this.csv.djname);
-            await this._parseLevels(style);
-            await this._parseSeries(this.csv);
-        },
-
-        async parseRivalData(style, iidxid) {
-            this.csv = await this._newRivalCSV(style, iidxid);
-            this.log('DJ NAME:', this.csv.djname);
-            await this._parseLevels(style, this.csv.rivalCode);
+            this.log('PLAY STYLE:', ['SP', 'DP'][style]);
+            await this._parseLevels(style, csv.rivalCode);
             await this._parseSeries(this.csv);
         },
 
@@ -222,6 +219,12 @@
             }
         },
 
+        async newCSV(style, iidxid) {
+            if (iidxid)
+                return await _newRivalCSV(style, iidxid);
+            return  await _newUserCSV(style);
+        },
+
         async _newUserCSV(style) {
             const url = `https://p.eagate.573.jp/game/2dx/${this.version}/djdata/status.html`;
             const html = await util.readDOM(url);
@@ -310,9 +313,21 @@ background-color: #252830;
 .csv_form * {
   flex: none;
   font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
   display: block;
   color: #fff;
   margin: 5px;
+}
+.csv_form h3 {
+  font-size: 18px;
+}
+.csv_form a {
+  display: inline-block;
+  color: #1997c6;
+  text-decoration: none;
+}
+.csv_form a:hover {
+    text-decoration: underline;
 }
 .csv_textinput {
   min-height: 30px;
@@ -364,6 +379,8 @@ background-color: #252830;
 </style>
 <form class="csv_form">
 <h3>CSV Generator</h3>
+<div>Last updated on ${LAST_UPDATED}</div>
+<div>Contact: @naynn_n</div>
 <input type="text" class="csv_textinput" id="csv_rival_id" name="rival_id" placeholder="Rival ID">
 <div class="csv_buttons">
   <button class="csv_button" id="csv_parse_sp" type="button">SP</button>
@@ -403,6 +420,6 @@ background-color: #252830;
         },
     };
 
-    let generator = new IIDXCSVGenerator();
-    generator.renderUI();
+    __csv_generator = new IIDXCSVGenerator();
+    __csv_generator.renderUI();
 })();
