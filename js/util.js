@@ -30,9 +30,9 @@ export async function loadLibrary(relpath) {
 export function normalize(str) {
     return latinize(
         str.trim()
-            .replace('§', 'ss')
-            .replace('”', '"')
-            .replace('焱', '火')
+            .replaceAll('§', 'ss')
+            .replaceAll(/[””]/g, '"')
+            .replaceAll('焱', '火')
             //.replace(/[･〜]/g, '')
     )
         .trim()

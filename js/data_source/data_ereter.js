@@ -65,8 +65,10 @@ DataEreter.prototype.parse = async function() {
                     ? parseFloat(fields[4 + offset].querySelectorAll('span span span')[1].innerText)
                     : 0,
                 lamp: fields[5 + offset].innerText.toUpperCase().trim() || 'NO-PLAY',
-            }
-            if (this.type !== TYPE.IIDX)
+            };
+            if (this.type === TYPE.IIDX)
+                ret.officialLevel = level.value;
+            else
                 ret.bp = fields[6].innerText.trim() !== '' ? parseInt(fields[7].innerText) : -1;
             this.records.set(key, ret);
         });

@@ -96,6 +96,7 @@ DiffTable.prototype = {
                 const divWidth = song.domObj.offsetWidth - (song.domObj.querySelector('.right').offsetWidth || 0) - 9;
                 if (title.offsetWidth > divWidth) {
                     let widthScale = Math.max(divWidth / title.offsetWidth, 0.6);
+                    title.style.width = (divWidth / widthScale) + 'px';
                     title.style.transform = `scaleX(${widthScale})`;
                 }
             });

@@ -286,6 +286,7 @@ pre.error {
 .title {
     display: inline-block;
     color: #ffffff;
+    overflow: hidden;
     transform-origin: left;
 }
 .normal { color: #21efef !important; }
