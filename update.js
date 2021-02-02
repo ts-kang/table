@@ -49,7 +49,7 @@
         },
 
         // follows csv format from e-amusement system
-        // may differs from standard rule (RFC 4180)
+        // may differs from the standard rule (RFC 4180)
         _escape(s) {
             return (typeof s === 'string' || s instanceof String)
                 ? s.replaceAll(',', '，')
