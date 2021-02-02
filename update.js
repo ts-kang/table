@@ -398,10 +398,7 @@ background-color: #252830;
                 try {
                     this.stop = false;
                     const rival = document.getElementById('csv_rival_id').value;
-                    if (rival)
-                        await this.parseRivalData(style, rival.replace(/[\D]/g, ''));
-                    else
-                        await this.parseUserData(style);
+                    await this.parseData(style, rival ? rival.replace(/[\D]/g, '') : undefined);
                     let a = document.createElement('a');
                     a.href = `data:text/plain;charset=utf-8,${encodeURIComponent(this.csv.toString())}`;
                     a.download = this.csv.getFilename();
