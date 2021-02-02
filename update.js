@@ -114,7 +114,7 @@
             this.csv = await this.newCSV(style, iidxid);
             this.log('DJ NAME:', this.csv.djname);
             this.log('PLAY STYLE:', ['SP', 'DP'][style]);
-            await this._parseLevels(style, csv.rivalCode);
+            await this._parseLevels(style, this.csv.rivalCode);
             await this._parseSeries(this.csv);
         },
 
@@ -130,7 +130,7 @@
 
             for (const [i, [value, versionName]] of versionList.entries()) {
                 if (this.stop)
-                    throw new Error('stop');
+                    throw 'stop';
                 this.log(`parse version ${versionName} (${i + 1}/${versionList.length})`);
                 const doc = await util.readDOM(url, {
                     method: 'POST',
@@ -192,7 +192,7 @@
                 this.log(`parse level ${level} (${i + 1}/${levels.length})`);
                 while (true) {
                     if (this.stop)
-                        throw new Error('stop');
+                        throw 'stop';
                     const doc = await util.readDOM(url, {
                         method: 'POST',
                         headers: {
@@ -221,8 +221,8 @@
 
         async newCSV(style, iidxid) {
             if (iidxid)
-                return await _newRivalCSV(style, iidxid);
-            return  await _newUserCSV(style);
+                return await this._newRivalCSV(style, iidxid);
+            return await this._newUserCSV(style);
         },
 
         async _newUserCSV(style) {
