@@ -106,7 +106,7 @@
         this.domUI = undefined;
         // ('title\tdifficulty', level)
         this.levels = [new Map(), new Map()]; // [SP, DP]
-        this.csv = [new CSV(HEADER), new CSV(HEADER)]; // [SP, DP]
+        this.csv = undefined;
         this.stop = true;
     };
     IIDXCSVGenerator.prototype = {
@@ -316,7 +316,7 @@ background-color: #252830;
   font-size: 14px;
   display: block;
   color: #fff;
-  margin: 5px;
+  margin: 5px 0;
 }
 .csv_form h3 {
   font-size: 18px;
@@ -399,6 +399,7 @@ background-color: #252830;
                     this.stop = false;
                     const rival = document.getElementById('csv_rival_id').value;
                     await this.parseData(style, rival ? rival.replace(/[\D]/g, '') : undefined);
+                    this.log('download');
                     let a = document.createElement('a');
                     a.href = `data:text/plain;charset=utf-8,${encodeURIComponent(this.csv.toString())}`;
                     a.download = this.csv.getFilename();
