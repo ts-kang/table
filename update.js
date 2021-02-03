@@ -6,7 +6,7 @@
     if (typeof __csv_generator !== 'undefined')
         return;
 
-    const LAST_UPDATED = '2021-02-02';
+    const LAST_UPDATED = '2021-02-03';
 
     function CSV(header, style, iidxid, djname) {
         this.header = header;
@@ -327,7 +327,7 @@ background-color: #252830;
   text-decoration: none;
 }
 .csv_form a:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 .csv_textinput {
   min-height: 30px;
@@ -414,7 +414,7 @@ background-color: #252830;
             };
             document.getElementById('csv_parse_sp').addEventListener('click', async () => await onclick(PLAYSTYLE.SP));
             document.getElementById('csv_parse_dp').addEventListener('click', async () => await onclick(PLAYSTYLE.DP));
-            document.getElementById('csv_stop').addEventListener('click', async () => this.stop = true);
+            document.getElementById('csv_stop').addEventListener('click', () => this.stop = true);
         },
     };
 

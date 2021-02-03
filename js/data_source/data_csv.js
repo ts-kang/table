@@ -79,7 +79,6 @@ DataCSV.prototype.apply = async function(table) {
         const data = this.records.get(key);
         if (data) {
             if (parseInt(song.officialLevel) !== parseInt(data.officialLevel)) {
-                    console.log('song.officialLevel', song.officialLevel, 'data.officialLevel', data.officialLevel);
                 this.records = new Map();
                 throw new Error('invalid data');
             }
@@ -100,7 +99,6 @@ DataCSV.prototype.apply = async function(table) {
             if (distance <= parseInt(Math.log2(Math.min(similarTitle.length, title.length)))) { // lev(ooo, bloom) === 2
                 const similarData = this.records.get(similarKey);
                 if (parseInt(song.officialLevel) !== parseInt(similarData.officialLevel)) {
-                    console.log('song.officialLevel', song.officialLevel, 'similarData.officialLevel', similarData.officialLevel);
                     this.records = new Map();
                     throw new Error('invalid data');
                 }
