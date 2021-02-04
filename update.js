@@ -41,14 +41,6 @@
             return -1;
         },
 
-        setValue(index, key, value) {
-            this.data[index][this.header.indexOf(key)] = value;
-        },
-
-        getValue(index, key) {
-            return this.data[index][this.header.indexOf(key)];
-        },
-
         getFilename() {
             return `${this.iidxid}_${['sp', 'dp'][this.style]}_score.csv`;
         },
@@ -291,18 +283,26 @@
             this.domUI = document.createElement('div');
             this.domUI.style = `
 position: fixed;
-left: 50%;
-top: 50%;
-margin-left: -150px;
-margin-top: -200px;
+left: 0;
+top: 0;
 z-index: 10000;
-width: 300px;
-height: 400px;
-padding: 5px;
-background-color: #252830;
+width: 100%;
+height: 100%;
+background-color: rgba(0, 0, 0, 0.5);
 `;
             this.domUI.innerHTML = `
 <style>
+.csv_container {
+  position: relative;
+  left: 50%;
+  top: 50%;
+  margin-left: -150px;
+  margin-top: -200px;
+  width: 300px;
+  height: 400px;
+  padding: 5px;
+  background-color: #252830;
+}
 .csv_form {
   all: initial;
   display: flex;
@@ -377,6 +377,7 @@ background-color: #252830;
   color: #ff8888;
 }
 </style>
+<div class="csv_container">
 <form class="csv_form">
 <h3>CSV Generator</h3>
 <div>Last updated on ${LAST_UPDATED}</div>
@@ -392,6 +393,7 @@ background-color: #252830;
 <div id="csv_log" class="csv_log">
 </div>
 </form>
+</div>
 `;
             document.body.appendChild(this.domUI);
             const onclick = async style => {
@@ -415,6 +417,13 @@ background-color: #252830;
             document.getElementById('csv_parse_sp').addEventListener('click', async () => await onclick(PLAYSTYLE.SP));
             document.getElementById('csv_parse_dp').addEventListener('click', async () => await onclick(PLAYSTYLE.DP));
             document.getElementById('csv_stop').addEventListener('click', () => this.stop = true);
+            this.domUI.addEventListener('click', e => {
+                if (e.target !== e.currentTarget)
+                    return;
+                this.stop = true;
+                this.domUI.style.display = 'none';
+                delete __csv_generator;
+            });
         },
     };
 

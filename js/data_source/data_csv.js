@@ -90,7 +90,7 @@ DataCSV.prototype.apply = async function(table) {
                   .reduce((t, [k, v]) => {
                       const kt = k.substring(0, k.lastIndexOf('\t'));
                       const d = util.lev(kt, title);
-                      if (d < t[2] && v.officialLevel === song.officialLevel)
+                      if (d < t[2] && parseInt(v.officialLevel) === parseInt(song.officialLevel))
                           return [k, kt, d];
                       return t;
                   }, ['', '', 1000]);

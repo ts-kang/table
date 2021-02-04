@@ -68,20 +68,25 @@ DiffTable.prototype = {
 
     async parse() {},
 
+    _adjustTitle(group) {
+        group.songs.forEach(song => {
+            const title = song.domObj.querySelector('.title');
+            const divWidth = song.domObj.offsetWidth - (song.domObj.querySelector('.right').offsetWidth || 0) - 9;
+            if (title.offsetWidth > divWidth) {
+                let widthScale = Math.max(divWidth / title.offsetWidth, 0.6);
+                title.style.width = (divWidth / widthScale) + 'px';
+                title.style.transform = `scaleX(${widthScale})`;
+            }
+        });
+    },
+
     updateDisplay(field) {
         if (field.visible === undefined || !field.updateDisplay)
             return;
 
         this.groups.forEach(group => {
             field.updateDisplay(group);
-            group.songs.forEach(song => {
-                const title = song.domObj.querySelector('.title');
-                const divWidth = song.domObj.offsetWidth - (song.domObj.querySelector('.right').offsetWidth || 0) - 9;
-                if (title.offsetWidth > divWidth) {
-                    let widthScale = Math.max(divWidth / title.offsetWidth, 0.6);
-                    title.style.transform = `scaleX(${widthScale})`;
-                }
-            });
+            this._adjustTitle(group);
         });
     },
 
@@ -91,15 +96,7 @@ DiffTable.prototype = {
                 if (field.visible !== undefined && field.updateDisplay)
                     field.updateDisplay(group);
             });
-            group.songs.forEach(song => {
-                const title = song.domObj.querySelector('.title');
-                const divWidth = song.domObj.offsetWidth - (song.domObj.querySelector('.right').offsetWidth || 0) - 9;
-                if (title.offsetWidth > divWidth) {
-                    let widthScale = Math.max(divWidth / title.offsetWidth, 0.6);
-                    title.style.width = (divWidth / widthScale) + 'px';
-                    title.style.transform = `scaleX(${widthScale})`;
-                }
-            });
+            this._adjustTitle(group);
         });
     },
 
