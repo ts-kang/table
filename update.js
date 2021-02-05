@@ -6,7 +6,7 @@
     if (typeof __csv_generator !== 'undefined')
         return;
 
-    const LAST_UPDATED = '2021-02-03';
+    const LAST_UPDATED = '2021-02-04';
 
     function CSV(header, style, iidxid, djname) {
         this.header = header;
@@ -239,12 +239,13 @@
 
         async _newRivalCSV(style, iidxid) {
             const url = `https://p.eagate.573.jp/game/2dx/${this.version}/rival/rival_search.html`;
+            const id = iidxid.replace(/[\D]/g, '');
             const html = await util.readDOM(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `iidxid=${iidxid}&mode=1`,
+                body: `iidxid=${id}&mode=1`,
             });
             const row = Array.from(html.querySelectorAll('table#result > tbody > tr')).pop();
             if (!row)
@@ -300,7 +301,7 @@ background-color: rgba(0, 0, 0, 0.5);
   margin-top: -200px;
   width: 300px;
   height: 400px;
-  padding: 5px;
+  padding: 10px;
   background-color: #252830;
 }
 .csv_form {
@@ -318,8 +319,41 @@ background-color: rgba(0, 0, 0, 0.5);
   color: #fff;
   margin: 5px 0;
 }
-.csv_form h3 {
+.csv_form *:after {
+  all: initial;
+}
+.csv_title {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  margin-bottom: 5px;
+}
+.csv_title h3 {
+  margin: 0;
   font-size: 18px;
+}
+.csv_exit {
+  margin: 0;
+  width: 20px;
+  height: 20px;
+  background-color: transparent;
+  cursor: pointer;
+}
+.csv_exit:before, .csv_exit:after {
+  position: absolute;
+  right: 10px;
+  width: 21px;
+  height: 2px;
+  border-radius: 1px;
+  content: ' ';
+  background-color: #ff8888;
+  cursor: pointer;
+}
+.csv_exit:before {
+  transform: rotate(45deg);
+}
+.csv_exit:after {
+  transform: rotate(-45deg);
 }
 .csv_form a {
   display: inline-block;
@@ -372,14 +406,13 @@ background-color: rgba(0, 0, 0, 0.5);
 .csv_pre.warn {
   color: #eeee88;
 }
-
 .csv_pre.error {
   color: #ff8888;
 }
 </style>
 <div class="csv_container">
 <form class="csv_form">
-<h3>CSV Generator</h3>
+<div class="csv_title"><h3>CSV Generator</h3><button class="csv_exit" id="csv_exit"></button></div>
 <div>Last updated on ${LAST_UPDATED}</div>
 <div>Contact: @naynn_n</div>
 <input type="text" class="csv_textinput" id="csv_rival_id" name="rival_id" placeholder="Rival ID">
@@ -398,9 +431,13 @@ background-color: rgba(0, 0, 0, 0.5);
             document.body.appendChild(this.domUI);
             const onclick = async style => {
                 try {
+                    if (!this.stop) {
+                        this.error('already running');
+                        return;
+                    }
                     this.stop = false;
                     const rival = document.getElementById('csv_rival_id').value;
-                    await this.parseData(style, rival ? rival.replace(/[\D]/g, '') : undefined);
+                    await this.parseData(style, rival);
                     this.log('download');
                     let a = document.createElement('a');
                     a.href = `data:text/plain;charset=utf-8,${encodeURIComponent(this.csv.toString())}`;
@@ -409,21 +446,23 @@ background-color: rgba(0, 0, 0, 0.5);
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
+                    this.stop = true;
                 } catch(e) {
                     this.error(e);
+                    this.stop = true;
                     throw e;
                 }
             };
-            document.getElementById('csv_parse_sp').addEventListener('click', async () => await onclick(PLAYSTYLE.SP));
-            document.getElementById('csv_parse_dp').addEventListener('click', async () => await onclick(PLAYSTYLE.DP));
-            document.getElementById('csv_stop').addEventListener('click', () => this.stop = true);
-            this.domUI.addEventListener('click', e => {
-                if (e.target !== e.currentTarget)
-                    return;
+            const exit = () => {
                 this.stop = true;
                 this.domUI.style.display = 'none';
                 delete __csv_generator;
-            });
+            };
+            document.getElementById('csv_parse_sp').addEventListener('click', () => onclick(PLAYSTYLE.SP).then());
+            document.getElementById('csv_parse_dp').addEventListener('click', () => onclick(PLAYSTYLE.DP).then());
+            document.getElementById('csv_stop').addEventListener('click', () => this.stop = true);
+            document.getElementById('csv_exit').addEventListener('click', exit);
+            //this.domUI.addEventListener('click', e => { if (e.target === e.currentTarget) exit() });
         },
     };
 
