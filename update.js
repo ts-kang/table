@@ -6,7 +6,7 @@
     if (typeof __csv_generator !== 'undefined')
         return;
 
-    const LAST_UPDATED = '2021-02-04';
+    const LAST_UPDATED = '2021-02-05';
 
     function CSV(header, style, iidxid, djname) {
         this.header = header;
@@ -412,7 +412,7 @@ background-color: rgba(0, 0, 0, 0.5);
 </style>
 <div class="csv_container">
 <form class="csv_form">
-<div class="csv_title"><h3>CSV Generator</h3><button class="csv_exit" id="csv_exit"></button></div>
+<div class="csv_title"><h3>CSV Generator</h3><button class="csv_exit" id="csv_exit" type="button"></button></div>
 <div>Last updated on ${LAST_UPDATED}</div>
 <div>Contact: @naynn_n</div>
 <input type="text" class="csv_textinput" id="csv_rival_id" name="rival_id" placeholder="Rival ID">
@@ -429,6 +429,7 @@ background-color: rgba(0, 0, 0, 0.5);
 </div>
 `;
             document.body.appendChild(this.domUI);
+            const thisScript = document.currentScript || Array.from(document.getElementsByTagName('script')).pop();
             const onclick = async style => {
                 try {
                     if (!this.stop) {
@@ -455,8 +456,10 @@ background-color: rgba(0, 0, 0, 0.5);
             };
             const exit = () => {
                 this.stop = true;
-                this.domUI.style.display = 'none';
+                this.domUI.remove();
                 delete __csv_generator;
+                if (thisScript)
+                    thisScript.remove();
             };
             document.getElementById('csv_parse_sp').addEventListener('click', () => onclick(PLAYSTYLE.SP).then());
             document.getElementById('csv_parse_dp').addEventListener('click', () => onclick(PLAYSTYLE.DP).then());
