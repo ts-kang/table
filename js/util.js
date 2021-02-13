@@ -30,20 +30,20 @@ export async function loadLibrary(relpath) {
 export function normalize(str) {
     return latinize(
         str.trim()
-            .replaceAll('§', 'ss')
-            .replaceAll('Χ', 'X') // 'Chi' to 'X'
-            //.replaceAll(/[””]/g, '"')
-            .replaceAll('焱', '火')
+            .replace(/§/g, 'ss')
+            .replace(/Χ/g, 'X') // 'Chi' to 'X'
+            //.replace(/[””]/g, '"')
+            .replace(/焱/g, '火')
             .replace(/[･]/g, '.')
-            .replaceAll('♥', '')
+            .replace(/♥/g, '')
             //.replace(/[･〜]/g, '')
     )
         .trim()
         .normalize('NFKD')
-        .replaceAll(/[\u0300-\u036f]/g, '')
-        .replaceAll(/[Ａ-Ｚａ-ｚ０-９！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)) // full-width to half-width
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[Ａ-Ｚａ-ｚ０-９！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)) // full-width to half-width
         //.replace(/[\u0020-\u002f\u003a-\u0040\u007b-\u007e\u00a0-\u00bf\u2000-\u206f\u0020]/g, '') // remove special characters
-        .replaceAll(' ', '')
+        .replace(/ /g, '')
         .toLowerCase();
 }
 
