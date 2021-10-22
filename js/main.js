@@ -87,7 +87,7 @@ async function takeScreenshot() {
     if (download)
         download.remove();
     window.scrollTo(0, 0);
-    const canvas = await html2canvas(DOM.content, { backgroundColor: '#252830' });
+    const canvas = await html2canvas(DOM.content, { backgroundColor: '#252830', scale: 1 });
     if (/(iPad|iPhone|iPod)/g.test(navigator.userAgent)) {
         let img = new Image();
         img.width = img.width || img.naturalWidth;
