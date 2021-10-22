@@ -94,7 +94,7 @@
     };
 
     function IIDXCSVGenerator() {
-        this.version = 28;
+        this.version = 29;
         this.domUI = undefined;
         // ('title\tdifficulty', level)
         this.levels = [new Map(), new Map()]; // [SP, DP]
