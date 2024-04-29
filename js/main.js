@@ -19,6 +19,7 @@ var TABLES = {
     bms_ereter_insane_analytics: async () => await import('./table/table_ereter.js').then(m => new m.TableEreterBMSInsane()),
     bms_dp_overjoy: async () => await import('./table/table_dp_overjoy.js').then(m => new m.TableDPOverjoy()),
     bms_dp_satellite: async () => await import('./table/table_bms_json.js').then(m => new m.TableBMSJson('https://stellabms.xyz/dp/table.html', 'DP Satellite')),
+    bms_dp_stella: async () => await import('./table/table_bms_json.js').then(m => new m.TableBMSJson('https://stellabms.xyz/dpst/table.html', 'DP Stella')),
     bms_sp_satellite: async () => await import('./table/table_bms_json.js').then(m => new m.TableBMSJson('https://stellabms.xyz/sl/table.html', 'SP Satellite')),
     bms_sp_stella: async () => await import('./table/table_bms_json.js').then(m => new m.TableBMSJson('https://stellabms.xyz/st/table.html', 'SP Stella')),
     bms_sp_insane: async () => await import('./table/table_bms_json.js').then(m => new m.TableBMSJson('http://www.ribbit.xyz/bms/tables/insane.html', 'SP Insane BMS')),
