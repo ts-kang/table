@@ -42,9 +42,9 @@ DataEreter.prototype.parse = async function() {
     this.player.userId = this.options.userId.value;
     const level = this.tableOptions.level;
     const url = [
-        `http://ereter.net/iidxplayerdata/${this.player.userId}/level/${level ? level.value : ''}/`,
-        `http://ereter.net/bmsplayerdata/${this.player.userId}/`,
-        `http://ereter.net/bmsplayerdata/${this.player.userId}/dpoverjoy/songs/perlevel/`,
+        `https://ereter.net/iidxplayerdata/${this.player.userId}/level/${level ? level.value : ''}/`,
+        `https://ereter.net/bmsplayerdata/${this.player.userId}/`,
+        `https://ereter.net/bmsplayerdata/${this.player.userId}/dpoverjoy/songs/perlevel/`,
     ][this.type];
 
     const html = new DOMParser().parseFromString(await util.readPage(url).then(res => res.text()), 'text/html');
