@@ -1,7 +1,7 @@
 import { TableBMSJson } from './table_bms_json.js';
 
 export function TableDPOverjoy() {
-    TableBMSJson.call(this, 'http://ereter.net/dpoverjoy/', 'DP Overjoy');
+    TableBMSJson.call(this, 'https://ereter.net/dpoverjoy/', 'DP Overjoy');
     this.dataSources.ereter = {
         display: 'ereter.net',
         instance: async () => await import('../data_source/data_ereter.js').then(m => new m.DataEreter(m.TYPE.OVERJOY, this.options)),
