@@ -15,8 +15,8 @@ export const tables = {
 
     iidxEreterAnalytics: async options => {
         const url = options.userId
-              ? `http://ereter.net/iidxplayerdata/${options.userId}/analytics/perlevel/`
-              : `http://ereter.net/iidxsongs/analytics/perlevel/`;
+              ? `https://ereter.net/iidxplayerdata/${options.userId}/analytics/perlevel/`
+              : `https://ereter.net/iidxsongs/analytics/perlevel/`;
         return ereterParser_table(url, true, options.userId);
     },
 
@@ -68,8 +68,8 @@ export const tables = {
 
     bmsEreterInsaneAnalytics: async options => {
         const url = options.userId
-              ? `http://ereter.net/bmsplayerdata/${options.userId}/dpbms/analytics/perlevel/`
-              : `http://ereter.net/bmssongs/dpbms/analytics/perlevel/`;
+              ? `https://ereter.net/bmsplayerdata/${options.userId}/dpbms/analytics/perlevel/`
+              : `https://ereter.net/bmssongs/dpbms/analytics/perlevel/`;
         return ereterParser_table(url, false, options.userId);
     },
 };
@@ -82,7 +82,7 @@ export const playerData = {
             records: new Map(),
         };
 
-        const url = `http://ereter.net/iidxplayerdata/${options.userId}/level/${options.level}/`;
+        const url = `https://ereter.net/iidxplayerdata/${options.userId}/level/${options.level}/`;
 
         const html = new DOMParser().parseFromString(await util.readPage(url), 'text/html');
         data.username = html.querySelector('.content > h3').innerText;
@@ -144,10 +144,10 @@ export const playerData = {
     },
 
     bmsEreterInsane: async options =>
-        ereterBMSParser_playerdata(`http://ereter.net/bmsplayerdata/${options.userId}/`),
+        ereterBMSParser_playerdata(`https://ereter.net/bmsplayerdata/${options.userId}/`),
 
     bmsEreterOverjoy: async options =>
-        ereterBMSParser_playerdata(`http://ereter.net/bmsplayerdata/${options.userId}/dpoverjoy/songs/perlevel/`),
+        ereterBMSParser_playerdata(`https://ereter.net/bmsplayerdata/${options.userId}/dpoverjoy/songs/perlevel/`),
 }
 
 // for IIDX and Insane BMS analytics page
