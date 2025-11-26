@@ -1,5 +1,5 @@
-const url_ereter_analytics = 'http://ereter.net/iidxplayerdata/{}/analytics/perlevel/';
-const url_ereter_level = 'http://ereter.net/iidxplayerdata/{}/level/12/';
+const url_ereter_analytics = 'https://ereter.net/iidxplayerdata/{}/analytics/perlevel/';
+const url_ereter_level = 'https://ereter.net/iidxplayerdata/{}/level/12/';
 
 const lamps = ['no-play', 'failed', 'assist', 'easy', 'clear', 'hard', 'ex-hard', 'fullcombo'];
 const ranks = ['F', 'F', 'E', 'D', 'C', 'B', 'A', 'AA', 'AAA'];
