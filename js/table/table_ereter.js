@@ -34,11 +34,11 @@ TableEreter.prototype.parse = async function() {
     
     const url = this.type === TYPE.IIDX
           ? (this.data.options.userId
-             ? `http://ereter.net/iidxplayerdata/${this.data.options.userId.value}/analytics/perlevel/`
-             : `http://ereter.net/iidxsongs/analytics/perlevel/`)
+             ? `https://ereter.net/iidxplayerdata/${this.data.options.userId.value}/analytics/perlevel/`
+             : `https://ereter.net/iidxsongs/analytics/perlevel/`)
           : (this.data.options.userId
-             ? `http://ereter.net/bmsplayerdata/${this.data.options.userId.value}/dpbms/analytics/perlevel/`
-             : `http://ereter.net/bmssongs/dpbms/analytics/perlevel/`);
+             ? `https://ereter.net/bmsplayerdata/${this.data.options.userId.value}/dpbms/analytics/perlevel/`
+             : `https://ereter.net/bmssongs/dpbms/analytics/perlevel/`);
     const html = new DOMParser().parseFromString(await util.readPage(url).then(res => res.text()), 'text/html');
 
     if (this.data.options.userId) {
